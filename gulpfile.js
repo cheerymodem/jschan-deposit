@@ -162,7 +162,8 @@ async function wipe() {
 	await Mongo.setConfig(defaultConfig);
 
 	const collectionNames = ['accounts', 'bans', 'custompages', 'boards', 'captcha', 'files',
-		'modlog', 'filters', 'news', 'posts', 'poststats', 'ratelimit', 'bypass', 'roles'];
+		'modlog', 'filters', 'news', 'posts', 'poststats', 'ratelimit', 'bypass', 'roles',
+		'deposits', 'depositsync'];
 	for (const name of collectionNames) {
 		//drop collection so gulp reset can be run again. ignores error of dropping non existing collection first time
 		await db.dropCollection(name).catch(() => {});
@@ -217,6 +218,8 @@ async function wipe() {
 	await Posts.db.createIndex({ 'board': 1,	'thread': 1, 'bumped': -1 });
 	await Posts.db.createIndex({ 'board': 1, 'reports.0': 1 }, { 'partialFilterExpression': { 'reports.0': { '$exists': true } } });
 	await Posts.db.createIndex({ 'globalreports.0': 1 }, { 'partialFilterExpression': {	'globalreports.0': { '$exists': true } } });
+	await Posts.db.createIndex({ 'address': 1 }, { 'sparse': true });
+	await db.collection('deposits').createIndex({ 'status': 1, 'withdrawAt': 1 });
 
 	const ANON = new Permission();
 	ANON.setAll([

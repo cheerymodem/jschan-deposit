@@ -143,6 +143,20 @@ module.exports = {
 	enableWeb3: false,
 	ethereumNode: '',
 
+	//deposit gating (DamageDeposit contract)
+	deposit: {
+		enabled: false,
+		rpcUrl: '',
+		chainId: 0,
+		contractAddress: '',
+		deployBlock: 0,
+		confirmations: 1,
+		pollInterval: 5000,
+		interfaceUrl: '',
+		assetSymbol: 'ETH',
+		assetDecimals: 18,
+	},
+
 	//extension for thumbnails
 	thumbExtension: '.webp',
 	//whether to animate gif thumbnails
@@ -403,6 +417,7 @@ module.exports = {
 		customFlags: false, //show custom flags
 		enableTegaki: true,
 		enableWeb3: false,
+		requireDeposit: false,
 		userPostDelete: true, //allow users to delete their posts
 		userPostSpoiler: true, //allow user to spoiler their post files
 		userPostUnlink: true, //alow user to unlink files fomr their post

@@ -1,7 +1,7 @@
 {
   "name": "jschan",
-  "version": "1.7.3",
-  "migrateVersion": "1.7.3",
+  "version": "1.7.4-deposit.1",
+  "migrateVersion": "1.7.4-deposit.1",
   "description": "",
   "main": "server.js",
   "dependencies": {
