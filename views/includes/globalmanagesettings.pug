@@ -525,6 +525,37 @@ ul.tabs.group
 						a(rel='nofollow' referrerpolicy='same-origin' target='_blank' href='https://ethereumnodes.com/') #{__('Nodes')}
 						| )
 				input(type='text' name='ethereum_node' value=settings.ethereumNode)
+			.row
+				.label #{__('Enable deposit')}
+				label.postform-style.ph-5
+					input(type='checkbox', name='deposit_enabled' value='true' checked=settings.deposit.enabled)
+			.row
+				.label #{__('RPC URL')}
+				input(type='text', name='deposit_rpc_url', value=settings.deposit.rpcUrl)
+			.row
+				.label #{__('Chain ID')}
+				input(type='number', name='deposit_chain_id', value=settings.deposit.chainId)
+			.row
+				.label #{__('Contract Address')}
+				input(type='text', name='deposit_contract_address', value=settings.deposit.contractAddress)
+			.row
+				.label #{__('Deploy Block')}
+				input(type='number', name='deposit_deploy_block', value=settings.deposit.deployBlock)
+			.row
+				.label #{__('Confirmations')}
+				input(type='number', name='deposit_confirmations', value=settings.deposit.confirmations)
+			.row
+				.label #{__('Poll Interval (ms)')}
+				input(type='number', name='deposit_poll_interval', value=settings.deposit.pollInterval)
+			.row
+				.label #{__('Interface URL')}
+				input(type='text', name='deposit_interface_url', value=settings.deposit.interfaceUrl)
+			.row
+				.label #{__('Asset Symbol')}
+				input(type='text', name='deposit_asset_symbol', value=settings.deposit.assetSymbol)
+			.row
+				.label #{__('Asset Decimals')}
+				input(type='number', name='deposit_asset_decimals', value=settings.deposit.assetDecimals)
 
 	.tab.tab-9
 		.col
@@ -791,6 +822,10 @@ ul.tabs.group
 				.label #{__('Enable Web3')}
 				label.postform-style.ph-5
 					input(type='checkbox', name='board_defaults_enable_web3', value='true' checked=settings.boardDefaults.enableWeb3)
+			.row
+				.label #{__('Require deposit')}
+				label.postform-style.ph-5
+					input(type='checkbox', name='board_defaults_require_deposit', value='true' checked=settings.boardDefaults.requireDeposit)
 			.row
 				.label #{__('User Post Deletion')}
 				label.postform-style.ph-5

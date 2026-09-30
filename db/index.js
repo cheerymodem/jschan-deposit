@@ -16,5 +16,7 @@ module.exports = {
 	Ratelimits: require(__dirname+'/ratelimits.js'),
 	Modlogs: require(__dirname+'/modlogs.js'),
 	Bypass: require(__dirname+'/bypass.js'),
+	Deposits: require(__dirname+'/deposits.js'),
+	DepositSync: require(__dirname+'/depositsync.js'),
 
 };

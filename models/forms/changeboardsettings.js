@@ -33,6 +33,7 @@ const { Boards, Posts, Modlogs } = require(__dirname+'/../../db/')
 		'enableTegaki': ['board', 'threads', 'catalog'],
 		'hideBanners': ['board', 'threads', 'catalog'],
 		'enableWeb3': ['board', 'threads', 'catalog'],
+		'requireDeposit': ['board', 'threads', 'catalog'],
 	});
 
 module.exports = async (req, res) => {
@@ -76,6 +77,7 @@ module.exports = async (req, res) => {
 		'customFlags': booleanSetting(req.body.custom_flags),
 		'enableTegaki': booleanSetting(req.body.enable_tegaki),
 		'enableWeb3': booleanSetting(req.body.enable_web3),
+		'requireDeposit': booleanSetting(req.body.require_deposit),
 		'forceAnon': booleanSetting(req.body.force_anon),
 		'sageOnlyEmail': booleanSetting(req.body.sage_only_email),
 		'userPostDelete': booleanSetting(req.body.user_post_delete),
