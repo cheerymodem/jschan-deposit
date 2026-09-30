@@ -1,5 +1,4 @@
-/* globals __ __n modal Tegaki grecaptcha hcaptcha captchaController appendLocalStorageArray socket isThread setLocalStorage forceUpdate captchaController uploaditem isCanvasBlocked TegakiWrapper */
-async function videoThumbnail(file) {
+/* globals __ __n modal Tegaki grecaptcha hcaptcha captchaController appendLocalStorageArray socket isThread setLocalStorage forceUpdate captchaController uploaditem isCanvasBlocked TegakiWrapper */async function videoThumbnail(file) {
 	return new Promise((resolve, reject) => {
 		const hiddenVideo = document.createElement('video');
 		hiddenVideo.setAttribute('src', URL.createObjectURL(file));
@@ -131,6 +130,10 @@ class postFormHandler {
 		if (this.web3LoginButton) {
 			this.web3LoginButton.addEventListener('click', (e) => this.doWeb3Login(e));
 		}
+
+		//deposit boards: intercept submit to sign with the wallet first
+		this.depositField = form.querySelector('input[name="nonce"]');
+		this.depositRequired = this.depositField != null;
 
 		//if file input, attach listeners for adding files, drag+drop, etc
 		this.fileInput = form.querySelector('input[type="file"]');
@@ -278,6 +281,75 @@ class postFormHandler {
 		}
 	}
 
+	//deposit-required boards: fetch a nonce, build the signed message, personal_sign,
+	//fill the hidden fields, then submit the detached form
+	async doDepositSign(e) {
+		try {
+			if (!window.ethereum || !window.ethereum.request) {
+				return doModal({
+					'title': __('Deposit'),
+					'message': __('A web3 wallet is required to post on this board.'),
+				});
+			}
+			const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+			const address = accounts[0].toLowerCase();
+			const nonceResponse = await fetch(`/nonce/${encodeURIComponent(address)}.json`).then(r => r.json());
+			const nonce = nonceResponse && nonceResponse.nonce;
+			if (!nonce) {
+				throw Error('Nonce request failed');
+			}
+			const messageContent = await this.buildDepositMessage(address, nonce);
+			const signature = await window.ethereum.request({
+				method: 'personal_sign',
+				params: [messageContent, address],
+			});
+			this.form.elements.signature.value = signature;
+			this.form.elements.address.value = address;
+			this.form.elements.nonce.value = nonce;
+			this.depositSigned = true;
+			this.formSubmit(e);
+		} catch (err) {
+			console.warn(err);
+			doModal({
+				'title': __('Deposit'),
+				'message': __('Failed to sign with your wallet.'),
+			});
+		}
+	}
+
+	async sha256Hex(input) {
+		const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+		let hex = '';
+		for (const byte of new Uint8Array(digest)) {
+			hex += byte.toString(16).padStart(2, '0');
+		}
+		return hex;
+	}
+
+	async buildDepositMessage(address, nonce) {
+		const normalisedMessage = (this.messageBox.value || '').replace(/\r\n/igm, '\n');
+		const messageSha = normalisedMessage.length === 0 ? '' : await this.sha256Hex(normalisedMessage);
+		let filesSha = 'none';
+		if (this.files && this.files.length > 0) {
+			const hashes = [];
+			for (const file of this.files) {
+				hashes.push(await this.sha256Hex(await file.text()));
+			}
+			filesSha = hashes.sort().join(',');
+		}
+		const board = this.form.dataset.board;
+		const thread = this.form.elements.thread ? (this.form.elements.thread.value || 'new') : 'new';
+		return [
+			'jschan-deposit post',
+			`Site: ${this.form.dataset.site}`,
+			`Board: ${board}`,
+			`Thread: ${thread}`,
+			`Message-SHA256: ${messageSha}`,
+			`Files-SHA256: ${filesSha}`,
+			`Nonce: ${nonce}`,
+		].join('\n');
+	}
+
 	updateFlagField() {
 		if (this.customFlagInput && this.customFlagInput.options.selectedIndex !== -1) {
 			this.selectedFlagImage.src = this.customFlagInput.options[this.customFlagInput.options.selectedIndex].dataset.src || '';
@@ -291,6 +363,12 @@ class postFormHandler {
 	}
 
 	formSubmit(e) {
+
+		//deposit boards: ask the wallet to sign first, then submit with hidden fields
+		if (this.depositRequired && !this.depositSigned) {
+			e.preventDefault();
+			return this.doDepositSign(e);
+		}
 
 		//get the captcha response if any recaptcha
 		const captchaResponse = recaptchaResponse;
@@ -576,6 +654,7 @@ class postFormHandler {
 			hash: fileHash,
 			...fileOptions,
 		};
+
 		switch (file.type.split('/')[0]) {
 			case 'image':
 				item.url = URL.createObjectURL(file);

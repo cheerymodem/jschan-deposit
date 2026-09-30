@@ -4,7 +4,7 @@ include ../mixins/filelabel.pug
 - const messageRequired = (!isThread && board.settings.forceThreadMessage) || (isThread && board.settings.forceReplyMessage);
 - const fileRequired = (!isThread && board.settings.forceThreadFile) || (isThread && board.settings.forceReplyFile);
 section.form-wrapper.flex-center
-	form.form-post#postform(action=`/forms/board/${board._id}/${modview ? 'mod' : ''}post`, enctype='multipart/form-data', method='POST' data-reset-on-submit='true')
+	form.form-post#postform(action=`/forms/board/${board._id}/${modview ? 'mod' : ''}post`, enctype='multipart/form-data', method='POST' data-reset-on-submit='true' data-board=board._id data-site=meta.url)
 		if modview
 			input(type='hidden' name='_csrf' value=csrf)
 		input(type='hidden' name='thread' value=isThread ? thread.postId : null)
@@ -90,6 +90,18 @@ section.form-wrapper.flex-center
 				.label #{__('Web3')}
 				input.dummy-link.web3-sign(type='button' value=__('Sign') disabled=true)
 				textarea.ml-1.no-resize(name='signature', rows='1', autocomplete='off' readonly)
+		if deposit && deposit.enabled && board.settings.requireDeposit
+			input(type='hidden' name='signature' value='')
+			input(type='hidden' name='address' value='')
+			input(type='hidden' name='nonce' value='')
+			section.row.jsonly.deposit
+				.label #{__('Deposit')}
+				span.col
+					span #{__('This board requires a deposit. Posting signs a message with your wallet and is verified against the deposit contract.')}
+					if deposit.interfaceUrl
+						a.ml-1(href=deposit.interfaceUrl rel='nofollow' referrerpolicy='same-origin' target='_blank') #{__('Deposit here')}
+			noscript
+				span #{__('Posting on this board requires JavaScript and a web3 wallet.')}
 		if ((board.settings.captchaMode === 1 && !isThread) || board.settings.captchaMode === 2) && !modview
 			if captchaOptions.type === 'text'
 				include ./captchasidelabel.pug

@@ -1446,6 +1446,15 @@
 	"Replace": "Replace",
 	"Force Account 2FA": "Force Account 2FA",
 	"Force Action 2FA ": "Force Action 2FA ",
-	"Table":"Table",
-	"Ethereum Links URL": "Ethereum Links URL"
+	"Table": "Table",
+	"Ethereum Links URL": "Ethereum Links URL",
+	"A web3 wallet is required to post on this board.": "A web3 wallet is required to post on this board.",
+	"Failed to sign with your wallet.": "Failed to sign with your wallet.",
+	"This board requires a deposit. Posting signs a message with your wallet and is verified against the deposit contract.": "This board requires a deposit. Posting signs a message with your wallet and is verified against the deposit contract.",
+	"Posting on this board requires JavaScript and a web3 wallet.": "Posting on this board requires JavaScript and a web3 wallet.",
+	"Deposit here": "Deposit here",
+	"A wallet deposit signature is required to post on this board": "A wallet deposit signature is required to post on this board",
+	"Invalid or expired signature nonce. Refresh the page and try again": "Invalid or expired signature nonce. Refresh the page and try again",
+	"No deposit found for this wallet (deposits can take a few blocks to be recognised)": "No deposit found for this wallet (deposits can take a few blocks to be recognised)",
+	"This wallet deposit is being withdrawn; posting is disabled": "This wallet deposit is being withdrawn; posting is disabled"
 }

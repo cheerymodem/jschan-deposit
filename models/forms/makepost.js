@@ -466,6 +466,10 @@ module.exports = async (req, res) => {
 	if (res.locals.recoveredAddress) {
 		signature = req.body.signature;
 		address = res.locals.recoveredAddress;
+	} else if (res.locals.depositAddress) {
+		//deposit-gated boards: use the verified, lowered address
+		signature = req.body.signature;
+		address = res.locals.depositAddress;
 	}
 
 	//build post data for db. for some reason all the property names are lower case :^)
@@ -517,6 +521,17 @@ module.exports = async (req, res) => {
 	let threadPage = null;
 	if (data.thread) {
 		threadPage = await Posts.getThreadPage(req.params.board, data.thread);
+	}
+
+	//deposit re-check just before insert: if the twin flipped away from active
+	//while the user was writing, still allow posting but insert hidden so the
+	//author's posts are never publicly visible during an exit
+	if (res.locals.depositAddress) {
+		const { Deposits } = require(__dirname+'/../../db/');
+		const twinNow = await Deposits.findOne({ _id: res.locals.depositAddress });
+		if (!twinNow || twinNow.status !== 'active') {
+			data.hidden = true;
+		}
 	}
 
 	const { postId, postMongoId } = await Posts.insertOne(res.locals.board, data, thread, res.locals.anonymizer);

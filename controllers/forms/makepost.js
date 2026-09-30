@@ -6,10 +6,83 @@ const makePost = require(__dirname+'/../../models/forms/makepost.js')
 	, dynamicResponse = require(__dirname+'/../../lib/misc/dynamic.js')
 	, { func: pruneFiles } = require(__dirname+'/../../schedules/tasks/prune.js')
 	, config = require(__dirname+'/../../lib/misc/config.js')
-	, { Files } = require(__dirname+'/../../db/')
+	, { Files, Deposits } = require(__dirname+'/../../db/')
+	, cache = require(__dirname+'/../../lib/redis/redis.js')
+	, message = require(__dirname+'/../../lib/deposit/message.js')
 	, paramConverter = require(__dirname+'/../../lib/middleware/input/paramconverter.js')
 	, { checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js')
-	, { recover: web3EthAccountsRecover } = require('web3-eth-accounts');
+		, { recover: web3EthAccountsRecover } = require('web3-eth-accounts');
+
+//post-time deposit gate for deposit-required boards. Consumes the nonce, rebuilds
+//and verifies the signed message, then checks the twin. Sets res.locals.depositError
+//and res.locals.depositAddress on success.
+const verifyDepositPost = async (req) => {
+	const { deposit } = config.get;
+	const requireDeposit = res.locals.board.settings.requireDeposit;
+
+	//staff posting via /modpost is exempt
+	if (req.path.endsWith('/modpost')) {
+		res.locals.depositError = null;
+		return true;
+	}
+	if (deposit.enabled !== true || requireDeposit !== true) {
+		res.locals.depositError = null;
+		return true;
+	}
+
+	const address = String(req.body.address || '').toLowerCase();
+	const nonce = String(req.body.nonce || '');
+	const signature = String(req.body.signature || '');
+	if (!/^0x[a-fA-F0-9]{40}$/.test(address) || !nonce || !signature) {
+		res.locals.depositError = __('A wallet deposit signature is required to post on this board');
+		return false;
+	}
+
+	//consume the nonce; must exist and be unused
+	const nonceKey = `nonce:${address}:${nonce}`;
+	if ((await cache.del(nonceKey)) !== 1) {
+		res.locals.depositError = __('Invalid or expired signature nonce. Refresh the page and try again');
+		return false;
+	}
+
+	const fileHashes = (req.files && req.files.file)
+		? req.files.file.map(f => f.sha256)
+		: [];
+	const fields = {
+		site: config.get.meta.url,
+		board: req.params.board,
+		thread: req.body.thread || null,
+		message: req.body.rawMessage != null ? req.body.rawMessage : req.body.message,
+		fileHashes,
+		nonce,
+		signature,
+	};
+	let recovered;
+	try {
+		recovered = (await message.verify(fields)).toLowerCase();
+	} catch (e) {
+		res.locals.depositError = __('Failed to verify message signature');
+		return false;
+	}
+	if (recovered !== address) {
+		res.locals.depositError = __('Failed to verify message signature');
+		return false;
+	}
+
+	const twin = await Deposits.findOne({ _id: address });
+	if (!twin) {
+		res.locals.depositError = __('No deposit found for this wallet (deposits can take a few blocks to be recognised)');
+		return false;
+	}
+	if (twin.status === 'withdrawing') {
+		res.locals.depositError = __('This wallet deposit is being withdrawn; posting is disabled');
+		return false;
+	}
+
+	res.locals.depositError = null;
+	res.locals.depositAddress = address;
+	return true;
+};
 
 module.exports = {
 
@@ -66,6 +139,7 @@ module.exports = {
 					return true;
 				}
 			}, expected: true, error: __('Failed to verify message signature') },
+			{ result: verifyDepositPost(req), blocking: true, expected: true, error: res.locals.depositError },
 		]);
 
 		if (errors.length > 0) {
