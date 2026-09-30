@@ -21,7 +21,7 @@ const express  = require('express')
 	, { manageRecent, manageReports, manageAssets, manageSettings, manageBans, manageFilters, editFilter, editCustomPage, manageMyPermissions,
 		manageBoard, manageThread, manageLogs, manageCatalog, manageCustomPages, manageStaff, editStaff, editPost } = require(__dirname+'/../models/pages/manage/')
 	, { globalManageSettings, globalManageReports, globalManageBans, globalManageBoards, globalManageFilters, globalEditFilter, editNews, editAccount, editRole,
-		globalManageRecent, globalManageAccounts, globalManageNews, globalManageLogs, globalManageRoles } = require(__dirname+'/../models/pages/globalmanage/')
+		globalManageRecent, globalManageAccounts, globalManageNews, globalManageLogs, globalManageRoles, globalManageDeposits } = require(__dirname+'/../models/pages/globalmanage/')
 	, { changePassword, blockBypass, home, register, login, create, myPermissions, sessions, setupTwoFactor,
 		board, catalog, banners, boardSettings, globalSettings, randombanner, news, captchaPage, overboard, overboardCatalog,
 		captcha, thread, modlog, modloglist, account, boardlist, customPage, csrfPage, noncePage } = require(__dirname+'/../models/pages/')
@@ -102,6 +102,8 @@ router.get('/globalmanage/globallogs.html', useSession, sessionRefresh, isLogged
 	hasPerms.one(Permissions.MANAGE_GLOBAL_LOGS), csrf, globalManageLogs);
 router.get('/globalmanage/bans.html', useSession, sessionRefresh, isLoggedIn, calcPerms,
 	hasPerms.one(Permissions.MANAGE_GLOBAL_BANS), csrf, globalManageBans);
+router.get('/globalmanage/deposits.(html|json)', useSession, sessionRefresh, isLoggedIn, calcPerms,
+	hasPerms.one(Permissions.MANAGE_GLOBAL_BANS), csrf, globalManageDeposits);
 router.get('/globalmanage/boards.(html|json)', useSession, sessionRefresh, isLoggedIn, calcPerms,
 	hasPerms.one(Permissions.MANAGE_GLOBAL_BOARDS), globalManageBoards);
 router.get('/globalmanage/news.html', useSession, sessionRefresh, isLoggedIn, calcPerms,

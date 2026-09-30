@@ -45,6 +45,11 @@ script(src=`/js/all.js?v=${commit}&ct=${captchaOptions.type}`)
 if enableWeb3 || isBoard && board.settings.enableWeb3
 	script(src=`/js/web3.js?v=${commit}`)
 
+//- deposit confiscation (needs the contract config meta on staff pages)
+if deposit && deposit.enabled
+	meta(name='deposit-config' content=JSON.stringify({ chainId: deposit.chainId, contractAddress: deposit.contractAddress }))
+	script(src=`/js/confiscate.js?v=${commit}`)
+
 //- additional scripts included only if hcaptcha, recaptcha, or yandex smartcaptcha are used
 if captchaOptions.type === 'google'
 	script(src='https://www.google.com/recaptcha/api.js' async defer)

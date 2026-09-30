@@ -19,10 +19,13 @@ module.exports = async (req, res, next) => {
 			ip = decodeQueryIP({ ip: fetchedPost.ip.cloak }, res.locals.permissions);
 		}
 	}
+	const address = (typeof req.query.address === 'string' && /^0x[a-fA-F0-9]{40}$/.test(req.query.address)
+		&& res.locals.permissions.get(Permissions.VIEW_RAW_IP))
+		? req.query.address.toLowerCase() : null;
 
 	let posts;
 	try {
-		posts = await Posts.getBoardRecent(offset, limit, ip, req.params.board, res.locals.permissions);
+		posts = await Posts.getBoardRecent(offset, limit, ip, req.params.board, res.locals.permissions, address);
 	} catch (err) {
 		return next(err);
 	}
@@ -39,6 +42,7 @@ module.exports = async (req, res, next) => {
 			viewRawIp: res.locals.permissions.get(Permissions.VIEW_RAW_IP) && !dontStoreRawIps,
 			page,
 			postId,
+			address,
 			queryIp: ip ? req.query.ip : null,
 			queryString,
 		});

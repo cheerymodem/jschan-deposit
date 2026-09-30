@@ -11,6 +11,7 @@ module.exports = {
 	globalManageAccounts: require(__dirname+'/accounts.js'),
 	globalManageSettings: require(__dirname+'/settings.js'),
 	globalManageRoles: require(__dirname+'/roles.js'),
+	globalManageDeposits: require(__dirname+'/deposits.js'),
 	globalEditFilter: require(__dirname+'/editfilter.js'),
 	editNews: require(__dirname+'/editnews.js'),
 	editAccount: require(__dirname+'/editaccount.js'),

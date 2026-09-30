@@ -22,6 +22,7 @@ module.exports = async (req, res, next) => {
 			board: res.locals.board,
 			thread,
 			csrf: req.csrfToken(),
+			permissions: res.locals.permissions,
 		});
 
 };

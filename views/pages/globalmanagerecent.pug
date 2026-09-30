@@ -10,7 +10,7 @@ block content
 	br
 	.wrapbar
 		+globalmanagenav('recent')
-		if page === 1 && !ip
+		if page === 1 && !ip && !address
 			.jsonly#livetext(data-view-raw-ip=(viewRawIp?'true':'false') data-room=`globalmanage-recent-${viewRawIp === true ? 'raw' : 'hashed'}`)
 				.dot#livecolor
 				|  #{__('Connecting...')} 
@@ -22,6 +22,9 @@ block content
 			p #{__('No posts.')}
 		else
 			hr(size=1)
+			if address
+				h4.no-m-p #{__('Global post history for key %s', address)}
+				hr(size=1)
 			if ip
 				h4.no-m-p #{__(`Global post history for %s`, ip)}
 				hr(size=1)

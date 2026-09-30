@@ -1,0 +1,158 @@
+/* globals __ __n doModal */
+//Confiscate a deposit from the owner's wallet. Used on the Deposits page and,
+//optionally, staff post views. Requires MetaMask/ethereum injected provider.
+(function () {
+	'use strict';
+
+	let depositChainId = null;
+	let depositContractAddress = null;
+	let owner = null;
+
+	const short = (s) => s ? `${s.substring(0, 6)}…${s.substring(s.length - 4)}` : '';
+
+	async function requestAccounts() {
+		if (!window.ethereum || !window.ethereum.request) {
+			throw new Error(__('A web3 wallet is required to confiscate deposits.'));
+		}
+		const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+		if (!accounts || accounts.length === 0) {
+			throw new Error(__('Refused account access.'));
+		}
+		return accounts[0];
+	}
+
+	async function readContract() {
+		const chainId = parseInt(await window.ethereum.request({ method: 'eth_chainId' }), 16);
+		if (depositChainId && chainId !== depositChainId) {
+			throw new Error(__('Connected to the wrong network. Switch to the deposit network.'));
+		}
+		//owner()
+		const result = await window.ethereum.request({
+			method: 'eth_call',
+			params: [{
+				to: depositContractAddress,
+				data: '0x8da5cb5b',
+			}, 'latest'],
+		});
+		if (!result || result === '0x') {
+			throw new Error(__('Could not read the contract owner.'));
+		}
+		return '0x' + result.slice(-40).toLowerCase();
+	}
+
+	async function getAmount() {
+		//depositRequirement()
+		const result = await window.ethereum.request({
+			method: 'eth_call',
+			params: [{
+				to: depositContractAddress,
+				data: '0x8bbcf85f',
+			}, 'latest'],
+		});
+		if (!result || result === '0x') {
+			return null;
+		}
+		return parseInt(result, 16);
+	}
+
+	async function confirmAndSend(address) {
+		const account = await requestAccounts();
+		owner = await readContract();
+		if (account.toLowerCase() !== owner) {
+			throw new Error(__('The connected wallet is not the deposit contract owner.'));
+		}
+		const amount = await getAmount();
+		const amountText = amount != null ? ` (${amount})` : '';
+		if (!window.confirm(__('Confiscate the deposit for key %s%s? This removes their posts and writes a public log.', short(address), amountText))) {
+			return false;
+		}
+		//confiscate(address): selector 0x44f252a0 + 32-byte padded address
+		const txHash = await window.ethereum.request({
+			method: 'eth_sendTransaction',
+			params: [{
+				from: account,
+				to: depositContractAddress,
+				data: `0x44f252a0${'00'.repeat(12)}${address.slice(2).toLowerCase()}`,
+			}],
+		});
+		//wait for the receipt to confirm the confiscation actually happened
+		const receipt = await waitForReceipt(txHash);
+		if (!receipt || receipt.status !== '0x1') {
+			throw new Error(__('Confiscation transaction failed.'));
+		}
+		return txHash;
+	}
+
+	function waitForReceipt(txHash) {
+		return new Promise((resolve, reject) => {
+			const check = async () => {
+				try {
+					const receipt = await window.ethereum.request({ method: 'eth_getTransactionReceipt', params: [txHash] });
+					if (receipt) {
+						resolve(receipt);
+					} else {
+						setTimeout(check, 1500);
+					}
+				} catch (e) {
+					reject(e);
+				}
+			};
+			check();
+		});
+	}
+
+	async function confiscate(button) {
+		const address = button.dataset.address;
+		const csrf = button.dataset.csrf;
+		if (!address || !csrf) {
+			return;
+		}
+		try {
+			const txHash = await confirmAndSend(address);
+			const res = await fetch('/forms/global/confiscate', {
+				method: 'POST',
+				headers: {
+					'content-type': 'application/x-www-form-urlencoded',
+				},
+				body: new URLSearchParams({
+					address,
+					txHash,
+					reason: '',
+					_csrf: csrf,
+				}),
+			});
+			const json = await res.json().catch(() => null);
+			doModal(json || { title: 'Confiscate', message: __('Deposit confiscated.') });
+			if (json && res.status === 200) {
+				//refresh so tombstones and modlog reflect the change
+				setTimeout(() => window.location.reload(), 1500);
+			}
+		} catch (e) {
+			console.warn(e);
+			doModal({
+				title: __('Confiscate'),
+				message: e.message || __('Could not confiscate the deposit.'),
+			});
+		}
+	}
+
+	window.addEventListener('settingsReady', () => {
+		const buttons = document.querySelectorAll('.confiscate-button');
+		if (buttons.length > 0) {
+			const meta = document.querySelector('meta[name="deposit-config"]');
+			if (meta) {
+				try {
+					const cfg = JSON.parse(meta.content);
+					depositChainId = cfg.chainId;
+					depositContractAddress = cfg.contractAddress;
+				} catch (e) {
+					//leave unset
+				}
+			}
+			for (const btn of buttons) {
+				btn.addEventListener('click', () => confiscate(btn));
+			}
+		}
+	});
+
+})();

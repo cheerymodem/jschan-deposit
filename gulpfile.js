@@ -593,6 +593,7 @@ const extraLocals = ${JSON.stringify({ meta: config.get.meta, reverseImageLinksU
 		`${paths.scripts.src}/post.js`,
 		`${paths.scripts.src}/settings.js`,
 		`${paths.scripts.src}/live.js`,
+		`${paths.scripts.src}/confiscate.js`,
 		`${paths.scripts.src}/captcha.js`,
 		`${paths.scripts.src}/iscanvasblocked.js`,
 		`${paths.scripts.src}/tegaki.js`,

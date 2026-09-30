@@ -12,10 +12,13 @@ module.exports = async (req, res, next) => {
 	const { dontStoreRawIps } = config.get;
 	const { page, offset, queryString } = pageQueryConverter(req.query, limit);
 	let ipMatch = decodeQueryIP(req.query, res.locals.permissions);
+	const address = (typeof req.query.address === 'string' && /^0x[a-fA-F0-9]{40}$/.test(req.query.address)
+		&& res.locals.permissions.get(Permissions.VIEW_RAW_IP))
+		? req.query.address.toLowerCase() : null;
 
 	let posts;
 	try {
-		posts = await Posts.getBoardRecent(offset, limit, ipMatch, null, res.locals.permissions);
+		posts = await Posts.getBoardRecent(offset, limit, ipMatch, null, res.locals.permissions, address);
 	} catch (err) {
 		return next(err);
 	}
@@ -31,6 +34,7 @@ module.exports = async (req, res, next) => {
 			permissions: res.locals.permissions,
 			viewRawIp: res.locals.permissions.get(Permissions.VIEW_RAW_IP) && !dontStoreRawIps,
 			page,
+			address,
 			ip: ipMatch ? req.query.ip : null,
 			queryString,
 		});

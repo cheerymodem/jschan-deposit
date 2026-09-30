@@ -1,0 +1,87 @@
+extends ../layout.pug
+include ../mixins/globalmanagenav.pug
+
+block head
+	title #{__('Deposits')}
+	script(src=`/js/confiscate.js?v=${commit}`)
+
+block content
+	h1.board-title #{__('Global Management')}
+	br
+	.wrapbar
+		+globalmanagenav('deposits')
+	if sync
+		small.sync-status
+			| #{__('Last block')}: #{sync.lastBlockGrant || 0}
+			|  #{__('Last poll')}: 
+			if sync.lastPollAt
+				time.reltime(datetime=sync.lastPollAt.toISOString()) #{sync.lastPollAt.toLocaleString(pageLanguage, {hourCycle:'h23'})}
+			else
+				| -
+			if deposit && deposit.withdrawPeriod
+				if sync.lagSeconds > Math.floor(deposit.withdrawPeriod / 4)
+					span.warn #{__('Deposit sync lag is high.')}
+	br
+	ul.tabs.group
+		li
+			a.tab-btn(data-tab='exiting' class='active') #{__('Exiting')}
+		li
+			a.tab-btn(data-tab='all') #{__('All Keys')}
+	.tab-page.active(data-tab='exiting')
+		if exiting.length === 0
+			p #{__('No withdrawing deposits.')}
+		else
+			.table-container.mv-10
+				table
+					tr
+						th #{__('Key')}
+						th #{__('Time left')}
+						th #{__('Posts')}
+						th #{__('Hidden')}
+						th #{__('Last post')}
+						th #{__('Actions')}
+					for d in exiting
+						tr
+							td
+								if d.address
+									a(href=`/globalmanage/recent.html?address=${encodeURIComponent(d.address)}`) #{d.id}
+								else
+									| #{d.id}
+							td
+								if d.withdrawAt
+									time.reltime(datetime=d.withdrawAt.toISOString()) #{d.withdrawAt.toLocaleString(pageLanguage, {hourCycle:'h23'})}
+							td #{d.stats.posts}
+							td #{d.stats.hidden}
+							td
+								if d.stats.lastPost
+									time.reltime(datetime=d.stats.lastPost.toISOString()) #{d.stats.lastPost.toLocaleString(pageLanguage, {hourCycle:'h23'})}
+								else
+									| -
+							td
+								if d.address && permissions.get(Permissions.MANAGE_GLOBAL_BANS)
+									button.confiscate-button.dummy-link(data-address=d.address data-csrf=csrf) #{__('Confiscate')}
+	.tab-page(data-tab='all')
+		if allKeys.length === 0
+			p #{__('No deposits.')}
+		else
+			.table-container.mv-10
+				table
+					tr
+						th #{__('Key')}
+						th #{__('Status')}
+						th #{__('Posts')}
+						th #{__('Hidden')}
+						th #{__('Actions')}
+					for d in allKeys
+						tr
+							td
+								if d.address
+									a(href=`/globalmanage/recent.html?address=${encodeURIComponent(d.address)}`) #{d.id}
+								else
+									| #{d.id}
+							td #{d.status}
+							td #{d.stats.posts}
+							td #{d.stats.hidden}
+							td
+								if d.address && d.status === 'withdrawing' && permissions.get(Permissions.MANAGE_GLOBAL_BANS)
+									button.confiscate-button.dummy-link(data-address=d.address data-csrf=csrf) #{__('Confiscate')}

@@ -49,10 +49,13 @@ module.exports = {
 		return threadPage;
 	},
 
-	getBoardRecent: async (offset=0, limit=20, ip, board, permissions) => {
+	getBoardRecent: async (offset=0, limit=20, ip, board, permissions, address) => {
 		const query = {};
 		if (board) {
 			query['board'] = board;
+		}
+		if (address) {
+			query['address'] = address.toLowerCase();
 		}
 		const projection = {
 			'salt': 0,

@@ -135,6 +135,8 @@ mixin post(post, truncate, manage=false, globalmanage=false, ban=false, overboar
 				p #{__('No message or files.')}
 		if (modview || manage || globalmanage) && post.signature && post.address
 			+web3signature(post.signature, post.address)
+			if deposit && deposit.enabled && permissions && permissions.get(Permissions.MANAGE_GLOBAL_BANS) && csrf
+				button.confiscate-button.dummy-link(data-address=post.address data-csrf=csrf) #{__('Confiscate')}
 			if post.edited
 				- const postEditDate = new Date(post.edited.date);
 				small.cb.mv-5.ml-5.edited

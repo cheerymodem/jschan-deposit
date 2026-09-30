@@ -12,7 +12,7 @@ block content
 	br
 	.wrapbar
 		+managenav('recent')
-		if page === 1 && !postId && !queryIp
+		if page === 1 && !postId && !queryIp && !address
 			.jsonly#livetext(data-view-raw-ip=(viewRawIp?'true':'false') data-room=`${board._id}-manage-recent-${viewRawIp === true ? 'raw' : 'hashed'}`)
 				.dot#livecolor
 				|  #{__('Connecting...')} 
@@ -24,8 +24,15 @@ block content
 			p #{__('No posts.')}
 		else
 			hr(size=1)
+			if address
+				h4.no-m-p #{__('Post history for key %s', address)}
+					|
+					if permissions.get(Permissions.MANAGE_GLOBAL_GENERAL)
+						|  
+						a(href=`/globalmanage/recent.html?address=${encodeURIComponent(address)}`) [#{__('See Global Posts by this Key')}]
+				hr(size=1)
 			- const ip = viewRawIp === true ? posts[0].ip.raw : posts[0].ip.cloak;
-			if postId || (queryIp && queryIp === ip)
+			if !address && (postId || (queryIp && queryIp === ip))
 				h4.no-m-p #{__('Post history for %s', ip)}
 					|
 					if permissions.get(Permissions.MANAGE_GLOBAL_GENERAL)
