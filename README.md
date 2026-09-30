@@ -1,6 +1,10 @@
-# jschan
+# jschan-deposit
 
-Anonymous imageboard software that doesn't suck.
+This is a modified version of [jschan](https://gitgud.io/fatchan/jschan/) that gates posting behind
+a DamageDeposit smart contract deposit. See [upstream](https://gitgud.io/fatchan/jschan) for
+the original AGPLv3 source.
+
+jschan — Anonymous imageboard software that doesn't suck.
 
 Repo Mirror(s):
  - https://gitgud.io/fatchan/jschan
