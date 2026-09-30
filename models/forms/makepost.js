@@ -34,7 +34,8 @@ const { createHash, randomBytes } = require('crypto')
 	, buildQueue = require(__dirname+'/../../lib/build/queue.js')
 	, dynamicResponse = require(__dirname+'/../../lib/misc/dynamic.js')
 	, { buildThread } = require(__dirname+'/../../lib/build/tasks.js')
-	, FIELDS_TO_REPLACE = ['email', 'subject', 'message'];
+	, FIELDS_TO_REPLACE = ['email', 'subject', 'message']
+	, omitAddress = require(__dirname+'/../../lib/deposit/omitaddress.js');
 
 module.exports = async (req, res) => {
 
@@ -653,12 +654,12 @@ module.exports = async (req, res) => {
 	};
 	if (data.thread) {
 		//dont emit thread to this socket, because the room only exists when the thread is open
-		Socketio.emitRoom(`${res.locals.board._id}-${data.thread}`, 'newPost', projectedPost);
+		Socketio.emitRoom(`${res.locals.board._id}-${data.thread}`, 'newPost', omitAddress(projectedPost));
 	}
 	const { raw, cloak, type } = data.ip;
 	//but emit it to manage pages because they need to get all posts through socket including thread
-	Socketio.emitRoom('globalmanage-recent-hashed', 'newPost', { ...projectedPost, ip: { cloak, raw: null, type } });
-	Socketio.emitRoom(`${res.locals.board._id}-manage-recent-hashed`, 'newPost', { ...projectedPost, ip: { cloak, raw: null, type } });
+	Socketio.emitRoom('globalmanage-recent-hashed', 'newPost', { ...omitAddress(projectedPost), ip: { cloak, raw: null, type } });
+	Socketio.emitRoom(`${res.locals.board._id}-manage-recent-hashed`, 'newPost', { ...omitAddress(projectedPost), ip: { cloak, raw: null, type } });
 	if (!dontStoreRawIps) {
         //no need to emit to these rooms if raw IPs are not stored
 		Socketio.emitRoom('globalmanage-recent-raw', 'newPost', { ...projectedPost, ip: { cloak, raw, type } });

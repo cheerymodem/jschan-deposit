@@ -72,6 +72,8 @@ module.exports = {
 			} else {
 				projection['globalreports'] = { ip: { raw: 0 } };
 			}
+			projection['signature'] = 0;
+			projection['address'] = 0;
 		}
 		const posts = await db.find(query, {
 			projection
@@ -91,6 +93,8 @@ module.exports = {
 		};
 		if (!getSensitive) {
 			projection['ip'] = 0;
+			projection['signature'] = 0;
+			projection['address'] = 0;
 		}
 		const threadsQuery = {
 			'thread': null,
@@ -235,6 +239,8 @@ module.exports = {
 		};
 		if (!getSensitive) {
 			projection['ip'] = 0;
+			projection['signature'] = 0;
+			projection['address'] = 0;
 		}
 		const [thread, replies] = await Promise.all([
 			db.findOne({
@@ -279,6 +285,8 @@ module.exports = {
 				'ip': 0,
 				'reports': 0,
 				'globalreports': 0,
+				'signature': 0,
+				'address': 0,
 			}
 		}).toArray();
 	},
@@ -315,6 +323,8 @@ module.exports = {
 				'ip': 0,
 				'reports': 0,
 				'globalreports': 0,
+				'signature': 0,
+				'address': 0,
 			}
 		})
 			.limit(catalogLimit)
@@ -343,6 +353,8 @@ module.exports = {
 				'ip': 0,
 				'reports': 0,
 				'globalreports': 0,
+				'signature': 0,
+				'address': 0,
 			}
 		});
 
@@ -418,6 +430,8 @@ module.exports = {
 				'ip': 0,
 				'reports': 0,
 				'globalreports': 0,
+				'signature': 0,
+				'address': 0,
 			}
 		}).toArray();
 
@@ -547,6 +561,8 @@ module.exports = {
 		if (!permissions.get(Permissions.VIEW_RAW_IP)) {
 			projection['ip.raw'] = 0;
 			projection['reports'] = { ip: { raw: 0 } };
+			projection['signature'] = 0;
+			projection['address'] = 0;
 		}
 		const posts = await db.find({
 			'reports.0': {
@@ -566,6 +582,8 @@ module.exports = {
 		if (!permissions.get(Permissions.VIEW_RAW_IP)) {
 			projection['ip.raw'] = 0;
 			projection['globalreports'] = { ip: { raw: 0 } };
+			projection['signature'] = 0;
+			projection['address'] = 0;
 		}
 		const query = {
 			'globalreports.0': {
@@ -889,6 +907,8 @@ module.exports = {
 				'ip': 0,
 				'reports': 0,
 				'globalreports': 0,
+				'signature': 0,
+				'address': 0,
 			}
 		});
 	},

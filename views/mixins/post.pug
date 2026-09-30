@@ -157,8 +157,8 @@ mixin post(post, truncate, manage=false, globalmanage=false, ban=false, overboar
 					pre.post-message !{post.message}
 			if !post.message && post.files.length === 0
 				p #{__('No message or files.')}
-			if post.signature && post.address
-				+web3signature(post.signature, post.address)
+		if (modview || manage || globalmanage) && post.signature && post.address
+			+web3signature(post.signature, post.address)
 			if post.edited
 				- const postEditDate = new Date(post.edited.date);
 				small.cb.mv-5.ml-5.edited
