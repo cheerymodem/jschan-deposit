@@ -80,3 +80,35 @@ junk`) so you can deposit from account #1 and confiscate from account #0 (the ow
   services are up.
 - If the local Hardhat chain was restarted, re-run `setupLocal.js` and update `deposit.deployBlock`
   and `deposit.contractAddress` in settings, then rebuild the deposit twin.
+
+## Manual end-to-end checklist
+
+Prereqs live: compose services up, Hardhat node + `setupLocal.js` running, jschan running, a
+deposit-requiring board created, `deposit.*` settings set (see "Enable deposit settings"), and
+MetaMask pointed at `http://localhost:8545` chain 31337 with the Hardhat test accounts imported.
+
+1. **Deposit and post (ok)**: from account #1 make a deposit via the DamageDeposit UI
+   (`?contract=<address>`), then post on the deposit board. Twin flips to `active`, post appears.
+2. **Post without deposit (rejected)**: with a wallet that has no deposit, attempt to post. The
+   server rejects with "No deposit found for this wallet".
+3. **Initiate a withdrawal**: from account #1 call `initiateWithdraw()`. New posts from that key
+   are rejected. Existing posts become hidden publicly but stay fully visible to staff with the
+   "Hidden: deposit exiting" banner, and the key is listed on the Deposits page under Exiting.
+4. **Withdraw after the period**: wait 60 s, then call `withdrawDeposit()`. The author's posts are
+   stripped to "Post removed: deposit withdrawn" tombstones; the key leaves the twin.
+5. **Re-deposit, post, confiscate**: deposit again from account #1 and post. Then, logged in with
+   the owner account #0 on the Deposits page, click Confiscate for that key and approve in
+   MetaMask. The posts become "Post removed: deposit confiscated" tombstones that link to the day's
+   modlog; the modlog row shows the tx hash and amount.
+6. **Author and moderator delete**: author deletes via the post password and a moderator deletes;
+   both leave tombstones ("Post removed by author" / "Post removed by moderator") instead of hard
+   deleting.
+7. **No addresses in public output**: check `/<board>/thread/N.json`, `/<board>/index.json` and
+   `/<board>/catalog.json` contain no `address`, `signature`, or hidden message content.
+
+## Verification of the deposit sync
+
+- Confirm the `deposits` collection is populated and the `depositsync` cursor advances with new
+  blocks.
+- Optionally run the storage-walk test against the live local chain:
+  `DEPOSIT_TEST_RPC=http://localhost:8545 DEPOSIT_TEST_CONTRACT=<eth-address> npx jest lib/deposit/storagewalk.test.js`

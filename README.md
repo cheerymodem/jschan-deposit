@@ -49,6 +49,21 @@ Contact the author:
 ## License
 GNU AGPLv3, see [LICENSE](LICENSE).
 
+## Threat model and limitations
+
+- **Posts by key linkage**: staff with `VIEW_RAW_IP` can list every post a wallet made. Anonymity is
+  toward the public, not toward staff.
+- **Timing correlation**: hiding and stripping happen at on-chain events, so on low-traffic boards an
+  observer can correlate a wallet with its posts around those events. Batching/jitter is deferred to v2.
+- **Hidden file reachability**: hidden posts' files stay reachable by direct URL until the post is
+  stripped (v2 adds quarantine).
+- **Posting needs a wallet**: deposit boards require JavaScript and a web3 wallet; there is no
+  noscript posting path.
+- **Reorg handling is minimal**: restrictive events are applied immediately and grant events wait for
+  confirmations, but deeper reorganisations are not specially handled.
+- **Single owner key**: the confiscation authority is one contract `owner()` EOA (v2 allows multiple
+  moderator keys).
+
 ## Installation & Upgrading
 See [INSTALLATION.md](INSTALLATION.md) for instructions on setting up a jschan instance or upgrading to a newer version.
 
