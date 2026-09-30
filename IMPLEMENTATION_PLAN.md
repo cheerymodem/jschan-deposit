@@ -120,7 +120,7 @@ Collections (`db/deposits.js`, export from `db/index.js`):
 
 `lib/deposit/client.js`: web3 (already a dependency) contract instance from settings, rebuilt on config change (`addCallback('config', ...)`), helpers: `getLogs(from, to)`, `checkDeposit(addr)`, `owner()`, `depositRequirement()`, `withdrawPeriod()`, `walkAccounts()` (storage walk per the verified layout), `getReceipt(txHash)`.
 
-`schedules/tasks/depositsync.js` (`condition: 'deposit.enabled'` style; `Schedule` checks `config.get[condition]`, so use a flat key or extend it):
+`schedules/tasks/depositsync.js` (`Schedule` checks `config.get[condition]`, which does not resolve dotted paths; either store a flat `depositEnabled` key or extend `Schedule.update()` to resolve dotted paths):
 1. On first run with no sync doc, backfill from `deployBlock` in chunks (e.g. 2000 blocks).
 2. Each poll: `head = latest block`. Fetch logs `(lastBlock+1 .. head)`, ordered by block/log index.
    - `WithdrawalInitiated`, `DepositWithdrawn`, `DepositConfiscated`: apply immediately (at `head`).
