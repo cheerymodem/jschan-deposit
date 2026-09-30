@@ -8,7 +8,7 @@ module.exports = {
 	db,
 
 	find: (query, options) => {
-		return db.find(query, options).toArray();
+		return db.find(query, options);
 	},
 
 	findOne: (query, options) => {

@@ -39,7 +39,7 @@ module.exports = async (req, res, next) => {
 	let allKeys, sync, agg;
 	try {
 		[ allKeys, sync, agg ] = await Promise.all([
-			Deposits.find({}).sort({ withdrawAt: 1 }),
+			(await Deposits.find({})).sort({ withdrawAt: 1 }).toArray(),
 			DepositSync.get(),
 			postAggregates(),
 		]);
