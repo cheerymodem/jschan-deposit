@@ -35,7 +35,15 @@ block content
 									|   
 							else
 								| #{log.postLinks.map(l => l.postId)}
-						td #{log.message || '-'}
+						td
+							if log.txHash
+								small.tx-hash
+									| #{log.txHash.substring(0, 18)}
+									if log.amount != null
+										|  (
+										span #{log.amount}
+										| )
+							| #{log.message || '-'}
 	hr(size=1)
 	.pages
 		+boardnav('logs', true, true)
