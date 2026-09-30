@@ -49,6 +49,14 @@ window.addEventListener('settingsReady', function() { //after domcontentloaded
 				applyToReplies = true;
 				disableReplies = true;
 				break;
+			case 'hidden':
+				dataMark = __("Post hidden: author's deposit is exiting");
+				break;
+			case 'tombstone':
+				//re-fetch isn't ideal but hides any content the tombstone strips;
+				//redo the body with the compact placeholder is handled by server rebuild.
+				dataMark = __('Post removed');
+				break;
 			case 'banmessage':
 			case 'edit': //opting for no data mark, already has the usual "edited x ago"
 				break;

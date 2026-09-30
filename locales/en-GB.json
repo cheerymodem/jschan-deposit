@@ -1456,5 +1456,14 @@
 	"A wallet deposit signature is required to post on this board": "A wallet deposit signature is required to post on this board",
 	"Invalid or expired signature nonce. Refresh the page and try again": "Invalid or expired signature nonce. Refresh the page and try again",
 	"No deposit found for this wallet (deposits can take a few blocks to be recognised)": "No deposit found for this wallet (deposits can take a few blocks to be recognised)",
-	"This wallet deposit is being withdrawn; posting is disabled": "This wallet deposit is being withdrawn; posting is disabled"
+	"This wallet deposit is being withdrawn; posting is disabled": "This wallet deposit is being withdrawn; posting is disabled",
+	"%s posts removed": "%s posts removed",
+	"Post hidden: author's deposit is exiting": "Post hidden: author's deposit is exiting",
+	"Post removed: deposit withdrawn": "Post removed: deposit withdrawn",
+	"Post removed: deposit confiscated": "Post removed: deposit confiscated",
+	"Post removed by moderator": "Post removed by moderator",
+	"Post removed by author": "Post removed by author",
+	"Post removed": "Post removed",
+	"Hidden: deposit exiting": "Hidden: deposit exiting",
+	"This post was removed.": "This post was removed."
 }

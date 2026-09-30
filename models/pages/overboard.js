@@ -52,6 +52,10 @@ module.exports = async (req, res, next) => {
 				.concat(addBoards)
 				.filter(b => !removeBoardsSet.has(b));
 			threads = await Posts.getRecent(selectedBoards, 1, overboardLimit, false, false);
+			threads = threads.map(t => {
+				t.replies = (t.replies || []).map(Posts.publicPost);
+				return Posts.publicPost(t);
+			});
 			cache.set(`overboard:${cacheQueryString}`, threads, 60);
 		} catch (err) {
 			return next(err);

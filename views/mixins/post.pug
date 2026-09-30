@@ -1,6 +1,30 @@
 include ./report.pug
 include ./banmessage.pug
 include ./web3signature.pug
+
+mixin tombstoneText(post)
+	if post.tombstone.reason === 'exiting'
+		| #{__("Post hidden: author's deposit is exiting")}
+	else if post.tombstone.reason === 'withdrawn'
+		| #{__('Post removed: deposit withdrawn')}
+	else if post.tombstone.reason === 'confiscated'
+		- const modlogRef = post.tombstone.modlog;
+		if modlogRef && modlogRef.board && modlogRef.date
+			a(href=`/${modlogRef.board}/logs/${modlogRef.date}.html`) #{__('Post removed: deposit confiscated')}
+		else
+			| #{__('Post removed: deposit confiscated')}
+	else if post.tombstone.reason === 'moderator'
+		if post.tombstone.date
+			- const td = new Date(post.tombstone.date);
+			- const modDate = `${('0'+(td.getMonth()+1)).slice(-2)}-${('0'+td.getDate()).slice(-2)}-${td.getFullYear()}`;
+			a(href=`/${post.board}/logs/${modDate}.html`) #{__('Post removed by moderator')}
+		else
+			| #{__('Post removed by moderator')}
+	else if post.tombstone.reason === 'author'
+		| #{__('Post removed by author')}
+	else
+		| #{__('Post removed')}
+
 mixin post(post, truncate, manage=false, globalmanage=false, ban=false, overboard=false)
 	.anchor(id=post.postId)
 	div(class=`post-container ${post.thread || ban === true ? '' : 'op'}`
@@ -12,79 +36,31 @@ mixin post(post, truncate, manage=false, globalmanage=false, ban=false, overboar
 		data-subject=post.subject
 		data-email=post.email
 		data-flag=post.country && post.country.code)
-		- const postURL = `/${post.board}/${(modview || manage || globalmanage) ? 'manage/' : ''}thread/${post.thread || post.postId}.html`;
-		.post-info
-			span
-				label
-					if !overboard
-						if globalmanage
-							input.post-check(type='checkbox', name='globalcheckedposts' value=post._id)
-						else if !ban
-							input.post-check(type='checkbox', name='checkedposts' value=post.postId)
+		- const postURL = `/${post.board}/${(modview || manage || globalmanage) ? 'manage/' : ''}thread/${post.thread || post.postId}.html`
+		if post.tombstone
+			.post-info
+				span
+					label
+						if !overboard
+							if globalmanage
+								input.post-check(type='checkbox', name='globalcheckedposts' value=post._id)
+							else if !ban
+								input.post-check(type='checkbox', name='checkedposts' value=post.postId)
+							| 
+						span.post-name.tombstone +tombstoneText(post)
 						| 
-					if manage
-						- const ip = viewRawIp === true ? post.ip.raw : post.ip.cloak;
-						a.bold(href=`${upLevel ? '../' : ''}recent.html?ip=${encodeURIComponent(ip)}`) [#{ip}]
-					else if modview
-						a.bold(href=`${upLevel ? '../' : ''}recent.html?postid=${post.postId}`) [+]
-					else if globalmanage
-						a.bold(class='post-board', href=`/${post.board}/manage/index.html`) /#{post.board}/
-						|  
-						- const ip = viewRawIp === true ? post.ip.raw : post.ip.cloak;
-						a.bold(href=`?ip=${encodeURIComponent(ip)}`) [#{ip}]
-					| 
-					if !post.thread
-						include ../includes/posticons.pug
-					if post.subject
-						span.post-subject #{post.subject}
-						| 
-					if post.email
-						a.post-name(href=`mailto:${post.email}`) #{post.name}
-					else 
-						span.post-name #{post.name}
-					| 
-				if post.country && post.country.code
-					include ../includes/postflag.pug
-				if post.tripcode
-					span.post-tripcode #{post.tripcode}
-					| 
-				if post.capcode
-					span.post-capcode #{post.capcode}
-					| 
-				- const postDate = new Date(post.date);
-				time.post-date.reltime(datetime=postDate.toISOString()) #{postDate.toLocaleString(pageLanguage, { hourCycle:'h23' })}
-				| 
-				if post.userId
-					span.user-id(style=`background-color: #${post.userId}`) #{post.userId}
-					| 
-			span.post-links
-				a.noselect.no-decoration(href=`${postURL}#${post.postId}`) #{__('No.')}
-				span.post-quoters
-					a.no-decoration(href=`${postURL}#postform`) #{post.postId}
-				|  
-				if !post.thread && (truncate || manage || globalmanage)
-					|  
-					span.noselect: a(href=`${postURL}`) [#{__('Open')}]
-				select.jsonly.postmenu
-					option(value='single') #{__('Hide')}
-					if post.userId
-						option(value='fid') #{__('Filter ID')}
-					if post.name
-						option(value='fname') #{__('Filter Name')}
-					if post.tripcode
-						option(value='ftrip') #{__('Filter Tripcode')}
-					if post.subject
-						option(value='fsub') #{__('Filter Subject')}
-					if post.country && post.country.code
-						option(value='fflag') #{__('Filter Flag')}
-					if !overboard && !ban
-						option(value='moderate') #{__('Moderate')}
-					if !ban && (modview || manage || globalmanage)
-						option(value='edit') #{__('Edit')}
-					if !post.thread
-						option(value='watch') #{__('Watch')}
-						option(value='playlist') #{__('Playlist')}
-		.post-data
+						- const tombstoneDate = new Date(post.date);
+						time.post-date.reltime(datetime=tombstoneDate.toISOString()) #{tombstoneDate.toLocaleString(pageLanguage, { hourCycle:'h23' })}
+			.post-data
+				if post.tombstone.reason === 'exiting' && (modview || manage || globalmanage)
+					span.post-hidden-banner
+						| #{__('Hidden: deposit exiting')}
+				p #{__('This post was removed.')}
+		else
+			- let hiddenBanner = post.hidden === true && (modview || manage || globalmanage);
+			if hiddenBanner
+				.post-info
+					span.post-name.tombstone #{__('Hidden: deposit exiting')}
 			if post.files.length > 0
 				.post-files(class=(post.files.length > 1 ? 'fn' : ''))
 					each file, fileindex in post.files

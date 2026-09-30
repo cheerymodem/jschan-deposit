@@ -3,7 +3,6 @@
 const { Posts, Boards, Modlogs } = require(__dirname+'/../../db/')
 	, Mongo = require(__dirname+'/../../db/db.js')
 	, banPoster = require(__dirname+'/banposter.js')
-	, deletePosts = require(__dirname+'/deletepost.js')
 	, spoilerPosts = require(__dirname+'/spoilerpost.js')
 	, stickyPosts = require(__dirname+'/stickyposts.js')
 	, bumplockPosts = require(__dirname+'/bumplockposts.js')
@@ -13,6 +12,7 @@ const { Posts, Boards, Modlogs } = require(__dirname+'/../../db/')
 	, reportPosts = require(__dirname+'/reportpost.js')
 	, dismissReports = require(__dirname+'/dismissreport.js')
 	, movePosts = require(__dirname+'/moveposts.js')
+	, tombstone = require(__dirname+'/../../lib/deposit/tombstone.js')
 	, { remove } = require('fs-extra')
 	, uploadDirectory = require(__dirname+'/../../lib/file/uploaddirectory.js')
 	, ModlogActions = require(__dirname+'/../../lib/input/modlogactions.js')
@@ -172,9 +172,13 @@ module.exports = async (req, res, next) => {
 			const { message } = await deletePostsFiles(res.locals, false); //delete files, not just unlink
 			messages.push(message);
 		}
-		const { action, message } = await deletePosts(res.locals.posts, req.body.delete_ip_global ? null : req.params.board, res.locals);
-		messages.push(message);
-		if (action) {
+		//moderator and author deletes now strip to tombstones instead of hard deletion
+		//(deleteboard/thread pruning/cyclic still hard-delete separately). Deleting an
+		//OP no longer removes its thread. deleteIp variants are included.
+		const reason = (isStaffOrGlobal || !req.body.postpassword) ? 'moderator' : 'author';
+		const stripped = await tombstone.stripPosts(res.locals.posts, reason);
+		messages.push(__n('%s posts removed', stripped));
+		if (stripped > 0) {
 			if (req.body.delete) {
 				modlogActions.push(ModlogActions.DELETE);
 			} else if (req.body.delete_ip_board) {

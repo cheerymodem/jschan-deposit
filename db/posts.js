@@ -8,12 +8,18 @@ const Mongo = require(__dirname+'/db.js')
 	, { Permissions } = require(__dirname+'/../lib/permission/permissions.js')
 	, { randomBytes } = require('crypto')
 	, randomBytesAsync = require('util').promisify(randomBytes)
+	, publicPost = require(__dirname+'/../lib/deposit/publicpost.js')
 	, db = Mongo.db.collection('posts')
 	, config = require(__dirname+'/../lib/misc/config.js');
 
 module.exports = {
 
 	db,
+
+	//transform a post for public (non-sensitive) output. Hidden posts (deposit
+	//withdrawing) are reduced to an exiting tombstone view so no content leaks, and
+	//already-tombstoned posts keep only their tombstone metadata.
+	publicPost,
 
 	getThreadPage: async (board, thread) => {
 		const threadsBefore = await db.aggregate([
