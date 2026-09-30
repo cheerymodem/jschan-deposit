@@ -25,8 +25,10 @@ module.exports = class Schedule {
 
 	//stop the schedule
 	stop () {
-		clearInterval(this.interval);
-		this.intervalId = null;
+		if (this.intervalId) {
+			clearInterval(this.intervalId);
+			this.intervalId = null;
+		}
 	}
 
 	//check config and either start or stop
