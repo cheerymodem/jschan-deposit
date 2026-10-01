@@ -47,7 +47,8 @@ mixin post(post, truncate, manage=false, globalmanage=false, ban=false, overboar
 							else if !ban
 								input.post-check(type='checkbox', name='checkedposts' value=post.postId)
 							| 
-						span.post-name.tombstone +tombstoneText(post)
+						span.post-name.tombstone
+							+tombstoneText(post)
 						| 
 						- const tombstoneDate = new Date(post.date);
 						time.post-date.reltime(datetime=tombstoneDate.toISOString()) #{tombstoneDate.toLocaleString(pageLanguage, { hourCycle:'h23' })}

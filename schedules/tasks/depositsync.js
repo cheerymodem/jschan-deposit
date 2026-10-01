@@ -1,6 +1,6 @@
 'use strict';
 
-const depositsync = require(__dirname+'/depositsync.js');
+const depositsync = require(__dirname+'/../../lib/deposit/depositsync.js');
 
 module.exports = {
 
