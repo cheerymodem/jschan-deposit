@@ -8,6 +8,10 @@ Docker. The DamageDeposit contract runs on a local Hardhat node.
 - Node.js current LTS (the upstream Docker image uses node:16, but web3 v4 needs newer)
 - Docker (for MongoDB and Redis)
 - pnpm (for the DamageDeposit repo, `../DamageDeposit`)
+- GraphicsMagick and ImageMagick (`sudo apt install graphicsmagick imagemagick`) - required for
+  image dimension detection, thumbnails and captchas. Without them, posting files fails with
+  "Possible unsupported or corrupt file".
+- ffmpeg (`sudo apt install ffmpeg`) - required for video/audio thumbnails
 
 ## Start local services
 
