@@ -99,7 +99,8 @@ section.form-wrapper.flex-center
 				span.col
 					span #{__('This board requires a deposit. Posting signs a message with your wallet and is verified against the deposit contract.')}
 					if deposit.interfaceUrl
-						a.ml-1(href=deposit.interfaceUrl rel='nofollow' referrerpolicy='same-origin' target='_blank') #{__('Deposit here')}
+						- const depositLink = deposit.contractAddress ? `${deposit.interfaceUrl}${deposit.interfaceUrl.includes('?') ? '&' : '?'}contract=${encodeURIComponent(deposit.contractAddress)}` : deposit.interfaceUrl;
+						a.ml-1(href=depositLink rel='nofollow' referrerpolicy='same-origin' target='_blank') #{__('Deposit here')}
 			noscript
 				span #{__('Posting on this board requires JavaScript and a web3 wallet.')}
 		if ((board.settings.captchaMode === 1 && !isThread) || board.settings.captchaMode === 2) && !modview

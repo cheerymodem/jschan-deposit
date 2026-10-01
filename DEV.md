@@ -38,6 +38,19 @@ pnpm hardhat run scripts/setupLocal.js --network localhost
 This deploys the ETH and ERC-20 variants (60 s withdraw period) and prints their addresses.
 Chain id is `31337`. Account #0 is the owner.
 
+## Start the DamageDeposit UI
+
+The demo interface is a dependency-free static site in `../DamageDeposit/interface/`. Serve it
+(any static server works; the repo suggests `http-server`):
+
+```
+cd ../DamageDeposit/interface
+pnpm dlx http-server -p 8080
+```
+
+Set the global setting `deposit.interfaceUrl` to `http://localhost:8080/`. The post form appends
+`?contract=<contractAddress>` automatically, so the setting is just the base URL.
+
 ## Set up jschan
 
 Create `configs/secrets.js` from `configs/secrets.js.example`, pointing Mongo at a local
