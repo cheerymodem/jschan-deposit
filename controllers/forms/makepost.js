@@ -16,7 +16,8 @@ const makePost = require(__dirname+'/../../models/forms/makepost.js')
 //post-time deposit gate for deposit-required boards. Consumes the nonce, rebuilds
 //and verifies the signed message, then checks the twin. Sets res.locals.depositError
 //and res.locals.depositAddress on success.
-const verifyDepositPost = async (req) => {
+const verifyDepositPost = async (req, res) => {
+	const { __ } = res.locals;
 	const { deposit } = config.get;
 	const requireDeposit = res.locals.board.settings.requireDeposit;
 
@@ -102,6 +103,18 @@ module.exports = {
 		const hasNoMandatoryFile = globalLimits.postFiles.max !== 0 && res.locals.board.settings.maxFiles !== 0 && res.locals.numFiles === 0;
 		const disableBoardAnonymizerFilePosting = res.locals.board.settings.disableAnonymizerFilePosting && !res.locals.permissions.get(Permissions.MANAGE_BOARD_GENERAL);
 
+		//run the deposit gate before building the schema so its error message is available
+		let depositOk = true;
+		let depositError = null;
+		try {
+			depositOk = await verifyDepositPost(req, res);
+			depositError = res.locals.depositError;
+		} catch (e) {
+			depositOk = false;
+			depositError = __('Failed to verify message signature');
+			console.warn(e);
+		}
+
 		const errors = await checkSchema([
 			{ result: (lengthBody(req.body.message, 1) && res.locals.numFiles === 0), expected: false, error: __('Posts must include a message or file') },
 			{ result: (res.locals.anonymizer && (disableAnonymizerFilePosting || disableBoardAnonymizerFilePosting)
@@ -139,7 +152,7 @@ module.exports = {
 					return true;
 				}
 			}, expected: true, error: __('Failed to verify message signature') },
-			{ result: verifyDepositPost(req), blocking: true, expected: true, error: res.locals.depositError },
+			{ result: depositOk, blocking: true, expected: true, error: depositError },
 		]);
 
 		if (errors.length > 0) {

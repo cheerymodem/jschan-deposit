@@ -50,10 +50,14 @@ Then:
 npm install
 npm run-script setup
 npx gulp reset
-npm run start
+npm run start-dev
 ```
 
 Gulp reset prints a generated admin password. Log in as `admin`.
+
+Note: use `npm run start-dev` (NODE_ENV != production) when running without nginx, because
+Express only serves the static CSS/JS/files itself in non-production mode. In production
+mode nginx is expected to serve `static/`.
 
 ## Enable deposit settings
 
