@@ -326,6 +326,15 @@ class postFormHandler {
 		return hex;
 	}
 
+	async sha256HexBytes(buffer) {
+		const digest = await window.crypto.subtle.digest('SHA-256', buffer);
+		let hex = '';
+		for (const byte of new Uint8Array(digest)) {
+			hex += byte.toString(16).padStart(2, '0');
+		}
+		return hex;
+	}
+
 	async buildDepositMessage(address, nonce) {
 		const normalisedMessage = (this.messageBox.value || '').replace(/\r\n/igm, '\n');
 		const messageSha = normalisedMessage.length === 0 ? '' : await this.sha256Hex(normalisedMessage);
@@ -333,7 +342,8 @@ class postFormHandler {
 		if (this.files && this.files.length > 0) {
 			const hashes = [];
 			for (const file of this.files) {
-				hashes.push(await this.sha256Hex(await file.text()));
+				//hash the raw bytes, not file.text() (which decodes binary as utf-8)
+				hashes.push(await this.sha256HexBytes(await file.arrayBuffer()));
 			}
 			filesSha = hashes.sort().join(',');
 		}
