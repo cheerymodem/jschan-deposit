@@ -103,7 +103,7 @@ section.form-wrapper.flex-center
 						a.ml-1(href=depositLink rel='nofollow' referrerpolicy='same-origin' target='_blank') #{__('Deposit here')}
 			noscript
 				span #{__('Posting on this board requires JavaScript and a web3 wallet.')}
-		if ((board.settings.captchaMode === 1 && !isThread) || board.settings.captchaMode === 2) && !modview
+		if ((board.settings.captchaMode === 1 && !isThread) || board.settings.captchaMode === 2) && !modview && !(deposit && deposit.enabled && board.settings.requireDeposit)
 			if captchaOptions.type === 'text'
 				include ./captchasidelabel.pug
 			else

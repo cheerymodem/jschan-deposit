@@ -145,7 +145,7 @@ module.exports = {
 
 	//deposit gating (DamageDeposit contract)
 	deposit: {
-		enabled: false,
+		enabled: true,
 		rpcUrl: '',
 		chainId: 0,
 		contractAddress: '',
@@ -417,7 +417,7 @@ module.exports = {
 		customFlags: false, //show custom flags
 		enableTegaki: true,
 		enableWeb3: false,
-		requireDeposit: false,
+		requireDeposit: true,
 		userPostDelete: true, //allow users to delete their posts
 		userPostSpoiler: true, //allow user to spoiler their post files
 		userPostUnlink: true, //alow user to unlink files fomr their post

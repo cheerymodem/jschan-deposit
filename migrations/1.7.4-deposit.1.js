@@ -4,7 +4,7 @@ module.exports = async(db, redis) => {
 	console.log('Adding deposit settings to globalsettings and boardDefaults');
 	await db.collection('globalsettings').updateOne({ _id: 'globalsettings' }, {
 		'$set': {
-			'deposit.enabled': false,
+			'deposit.enabled': true,
 			'deposit.rpcUrl': '',
 			'deposit.chainId': 0,
 			'deposit.contractAddress': '',
@@ -14,7 +14,7 @@ module.exports = async(db, redis) => {
 			'deposit.interfaceUrl': '',
 			'deposit.assetSymbol': 'ETH',
 			'deposit.assetDecimals': 18,
-			'boardDefaults.requireDeposit': false,
+			'boardDefaults.requireDeposit': true,
 		},
 	});
 	console.log('Clearing globalsettings cache');
