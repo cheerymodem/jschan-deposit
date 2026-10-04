@@ -27,6 +27,7 @@ details.toggle-label#actionform
 		label
 			input#report(type='text', name='report_reason', placeholder=__('Report reason') autocomplete='off')
 	.actions
-		h4.no-m-p #{__('Captcha')}:
-		include ./captcha.pug
+		if !(deposit && deposit.enabled && board.settings.requireDeposit)
+			h4.no-m-p #{__('Captcha')}:
+			include ./captcha.pug
 	input(type='submit', value=__('Submit'))
