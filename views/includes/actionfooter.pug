@@ -2,6 +2,10 @@ details.toggle-label#actionform
 	summary.collapse#action-menu #{__('Show Post Actions')}
 	.actions
 		input(type='hidden' name='hide_name' value='1')
+		if deposit && deposit.enabled && board.settings.requireDeposit
+			input(type='hidden' name='signature' value='')
+			input(type='hidden' name='address' value='')
+			input(type='hidden' name='nonce' value='')
 		h4.no-m-p #{__('Actions')}:
 		if board.settings.userPostDelete
 			label

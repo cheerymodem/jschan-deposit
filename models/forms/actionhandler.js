@@ -290,6 +290,40 @@ module.exports = async (req, res, next) => {
 			messages.push(message);
 		}
 
+		//moderator confiscation of the deposit of spam reporters on a deposit board
+		if (res.locals.board && res.locals.board.settings.requireDeposit === true
+			&& (req.body.confiscate_reporters || req.body.global_confiscate_reporters)) {
+			const reporterAddresses = new Set();
+			const globalConfiscate = req.body.global_confiscate_reporters == true;
+			for (const post of res.locals.posts) {
+				const reports = globalConfiscate ? (post.globalreports || []) : (post.reports || []);
+				for (const r of reports) {
+					if (r.address && req.body.checkedreports
+						&& req.body.checkedreports.includes(r.id.toString())) {
+						reporterAddresses.add(r.address.toLowerCase());
+					}
+				}
+			}
+			for (const address of reporterAddresses) {
+				const txHash = `confiscate:${address}:${Date.now()}`;
+				const stripped = await tombstone.confiscateFor(address, txHash, null, __('Reported spam: %s', req.body.log_message || __('confiscated')));
+				await require(__dirname+'/../../db/').Deposits.delete(address);
+				if (stripped > 0) {
+					messages.push(__('Confiscated deposit for reporter %s (%s posts removed)', address, stripped));
+				} else {
+					messages.push(__('Confiscated deposit for reporter %s', address));
+				}
+			}
+			buildQueue.push({
+				'task': 'buildModLog',
+				'options': { 'board': res.locals.board },
+			});
+			buildQueue.push({
+				'task': 'buildModLogList',
+				'options': { 'board': res.locals.board },
+			});
+		}
+
 	}
 
 	//execute the actions from the resulting combined query in one shot

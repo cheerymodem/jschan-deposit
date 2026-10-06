@@ -17,6 +17,12 @@ module.exports = (req, res) => {
 		}
 	};
 
+	//deposit boards: bind the report to the verified, active wallet address that
+	//signed it, so staff can confiscate spam reports
+	if (res.locals.reportDepositAddress) {
+		report.address = res.locals.reportDepositAddress;
+	}
+
 	const ret = {
 		message: __n('Reported %s posts', res.locals.posts.length),
 		action: '$push',

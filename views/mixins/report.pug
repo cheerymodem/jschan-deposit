@@ -8,3 +8,5 @@ mixin report(r, manage=false)
 		- const reportDate = new Date(r.date);
 		time.reltime(datetime=reportDate.toISOString()) #{reportDate.toLocaleString(pageLanguage, { hourCycle:'h23' })}
 		|  | #{__('Reason')}: #{r.reason}
+		if r.address
+			|  | #[a.bold(href=`?deposit=${r.address}`) #{r.address}]

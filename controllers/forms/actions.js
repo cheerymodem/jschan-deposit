@@ -1,6 +1,6 @@
 'use strict';
 
-const { Posts, Boards } = require(__dirname+'/../../db/')
+const { Posts, Boards, Deposits } = require(__dirname+'/../../db/')
 	, { Permissions } = require(__dirname+'/../../lib/permission/permissions.js')
 	, config = require(__dirname+'/../../lib/misc/config.js')
 	, actionHandler = require(__dirname+'/../../models/forms/actionhandler.js')
@@ -9,11 +9,63 @@ const { Posts, Boards } = require(__dirname+'/../../db/')
 	, paramConverter = require(__dirname+'/../../lib/middleware/input/paramconverter.js')
 	, { checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js');
 
+//validate a wallet-bound report proof on a deposit board: the submitted address
+//must have an active twin and the signature must recover to it over the
+//report-scoped message. No live RPC at request time (invariant 2).
+const verifyReportDeposit = async (req, res) => {
+	const { __ } = res.locals;
+	const { deposit } = config.get;
+	const requireDeposit = res.locals.board && res.locals.board.settings.requireDeposit === true;
+	const isReport = existsBody(req.body.report) || existsBody(req.body.global_report);
+	if (!requireDeposit || deposit.enabled !== true || !isReport) {
+		res.locals.reportDepositError = null;
+		return true;
+	}
+
+	const address = String(req.body.address || '').toLowerCase();
+	const nonce = String(req.body.nonce || '');
+	const signature = String(req.body.signature || '');
+	if (!/^0x[a-fA-F0-9]{40}$/.test(address) || !nonce || !signature) {
+		res.locals.reportDepositError = __('A wallet deposit signature is required to report on this board');
+		return false;
+	}
+
+	//consume the report nonce; must exist and be unused
+	const nonceKey = `nonce:${address}:${nonce}`;
+	if ((await require(__dirname+'/../../lib/redis/redis.js').del(nonceKey)) !== 1) {
+		res.locals.reportDepositError = __('Invalid or expired signature nonce. Refresh the page and try again');
+		return false;
+	}
+
+	let recovered;
+	try {
+		const reportMessage = require(__dirname+'/../../lib/deposit/report.js');
+		recovered = (await reportMessage.verify({ site: config.get.meta.url, board: req.params.board, nonce, signature })).toLowerCase();
+	} catch (e) {
+		res.locals.reportDepositError = __('Failed to verify message signature');
+		return false;
+	}
+	if (recovered !== address) {
+		res.locals.reportDepositError = __('Failed to verify message signature');
+		return false;
+	}
+
+	const twin = await Deposits.findOne({ _id: address });
+	if (!twin || twin.status !== 'active') {
+		res.locals.reportDepositError = __('No active deposit found for this wallet');
+		return false;
+	}
+
+	res.locals.reportDepositError = null;
+	res.locals.reportDepositAddress = address;
+	return true;
+};
+
 module.exports = {
 
 	paramConverter: paramConverter({
 		timeFields: ['ban_duration'],
-		trimFields: ['postpassword', 'report_reason', 'ban_reason', 'log_message', 'move_to_board'],
+		trimFields: ['postpassword', 'report_reason', 'ban_reason', 'log_message', 'move_to_board', 'address', 'nonce', 'signature'],
 		allowedArrays: ['checkedreports', 'checkedposts'],
 		numberFields: ['move_to_thread', 'sticky'],
 		numberArrays: ['checkedposts'],
@@ -26,6 +78,8 @@ module.exports = {
 		const { globalLimits } = config.get;
 
 		res.locals.actions = actionChecker(req, res);
+
+		const reportDepositOk = await verifyReportDeposit(req, res);
 
 		const errors = await checkSchema([
 			{ result: lengthBody(req.body.checkedposts, 1), expected: false, blocking: true, error: __('Must select at least one post') },
@@ -47,6 +101,7 @@ module.exports = {
 			{ result: lengthBody(req.body.log_message, 0, globalLimits.fieldLength.log_message), expected: false, error: __('Modlog message must be %s characters or less', globalLimits.fieldLength.log_message) },
 			{ result: (existsBody(req.body.report || req.body.global_report) && lengthBody(req.body.report_reason, 1)), expected: false, blocking: true, error: __('Reports must have a reason') },
 			{ result: (existsBody(req.body.move) && (!req.body.move_to_thread && !req.body.move_to_board)), expected: false, error: __('Must input destinaton thread number or board to move posts') },
+			{ result: reportDepositOk, blocking: true, expected: true, error: res.locals.reportDepositError },
 			{ result: async () => {
 				if (req.body.move && req.body.move_to_thread) {
 					const moveBoard = req.body.move_to_board || req.params.board;

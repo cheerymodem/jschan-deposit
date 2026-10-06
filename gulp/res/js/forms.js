@@ -135,6 +135,13 @@ class postFormHandler {
 		this.depositField = form.querySelector('input[name="nonce"]');
 		this.depositRequired = this.depositField != null;
 
+		//deposit-report boards: reporting needs a wallet proof too. The deposit
+		//flag lives on the page's post form; the report checkboxes live on the
+		//action form, so look the deposit flag up document-wide.
+		this.isReportForm = !!form.querySelector('input[name="report"]');
+		this.depositReportRequired = this.isReportForm
+			&& document.querySelector('form[data-deposit-report="true"]') != null;
+
 		//if file input, attach listeners for adding files, drag+drop, etc
 		this.fileInput = form.querySelector('input[type="file"]');
 		if (this.fileInput) {
@@ -317,6 +324,53 @@ class postFormHandler {
 		}
 	}
 
+	//deposit-report-required boards: sign a report-scoped message, fill the
+	//hidden fields on the action form, then submit
+	async doDepositReportSign(e) {
+		try {
+			if (!window.ethereum || !window.ethereum.request) {
+				return doModal({
+					'title': __('Deposit'),
+					'message': __('A web3 wallet is required to report on this board.'),
+				});
+			}
+			const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+			const address = accounts[0].toLowerCase();
+			const nonceResponse = await fetch(`/nonce/${encodeURIComponent(address)}.json`).then(r => r.json());
+			const nonce = nonceResponse && nonceResponse.nonce;
+			if (!nonce) {
+				throw Error('Nonce request failed');
+			}
+			const messageContent = [
+				'jschan-deposit report',
+				`Site: ${this.form.dataset.site}`,
+				`Board: ${this.form.dataset.board}`,
+				`Nonce: ${nonce}`,
+			].join('\n');
+			const signature = await window.ethereum.request({
+				method: 'personal_sign',
+				params: [messageContent, address],
+			});
+			//fill the hidden signing fields on the action form (this.form is the
+			//action form itself on report boards)
+			const form = this.form;
+			const signatureInput = form.querySelector('input[name="signature"]');
+			const addressInput = form.querySelector('input[name="address"]');
+			const nonceInput = form.querySelector('input[name="nonce"]');
+			if (signatureInput) { signatureInput.value = signature; }
+			if (addressInput) { addressInput.value = address; }
+			if (nonceInput) { nonceInput.value = nonce; }
+			this.depositReportSigned = true;
+			this.formSubmit(e);
+		} catch (err) {
+			console.warn(err);
+			doModal({
+				'title': __('Deposit'),
+				'message': __('Failed to sign with your wallet.'),
+			});
+		}
+	}
+
 	async sha256Hex(input) {
 		const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
 		let hex = '';
@@ -378,6 +432,12 @@ class postFormHandler {
 		if (this.depositRequired && !this.depositSigned) {
 			e.preventDefault();
 			return this.doDepositSign(e);
+		}
+
+		//deposit-report boards: signing a report needs a fresh wallet proof too
+		if (this.depositReportRequired && !this.depositReportSigned) {
+			e.preventDefault();
+			return this.doDepositReportSign(e);
 		}
 
 		//get the captcha response if any recaptcha

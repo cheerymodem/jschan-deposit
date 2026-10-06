@@ -45,6 +45,10 @@ details.toggle-label#actionform
 				label
 					input.post-check(type='checkbox', name='report_ban' value='1')
 					| #{__('Ban Reporters')}
+				if deposit && deposit.enabled && board.settings.requireDeposit
+					label
+						input.post-check(type='checkbox', name='confiscate_reporters' value='1')
+						| #{__('Confiscate Reporter Deposits')}
 				label
 					input.post-check(type='checkbox', name='ban' value='1')
 					| #{__('Ban Poster')}
