@@ -16,13 +16,23 @@ module.exports = {
 	},
 
 	upsertActive: (address, blockNumber, lastEventBlock) => {
-		return db.updateOne({ '_id': address.toLowerCase() }, {
+		//only activate when the key is not already withdrawing in our store. The
+		//grant cursor lags by confirmations and can otherwise re-apply a deposit
+		//after a restrictive event set the twin to withdrawing, resurrecting it.
+		return db.updateOne({
+			'_id': address.toLowerCase(),
+			'status': { '$ne': 'withdrawing' },
+		}, {
 			'$set': {
 				'status': 'active',
 				'withdrawAt': null,
 				'depositBlock': blockNumber,
 				'lastEventBlock': lastEventBlock,
 				'updatedAt': new Date(),
+			},
+			'$setOnInsert': {
+				'depositBlock': blockNumber,
+				'lastEventBlock': lastEventBlock,
 			},
 		}, { 'upsert': true });
 	},

@@ -26,7 +26,7 @@ const { Posts, Boards, Modlogs } = require(__dirname+'/../../db/')
 
 module.exports = async (req, res, next) => {
 
-	const { __ } = res.locals;
+	const { __, __n } = res.locals;
 
 	//try to set a good redirect
 	let redirect = req.headers.referer;
