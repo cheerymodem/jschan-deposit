@@ -17,11 +17,15 @@ module.exports = async (req, res) => {
 
 	if (req.body.ban || req.body.global_ban) {
 		const banBoard = req.body.global_ban ? [null, req.params.board] : req.params.board;
+		//deposit boards ban by wallet address instead of IP
+		const addressBans = req.body.ban
+			&& res.locals.board && res.locals.board.settings.requireDeposit === true;
 		const ipPosts = res.locals.posts.reduce((acc, post) => {
-			if (!acc[post.ip.cloak]) {
-				acc[post.ip.cloak] = [];
+			const key = addressBans ? (post.address || '') : post.ip.cloak;
+			if (!acc[key]) {
+				acc[key] = [];
 			}
-			acc[post.ip.cloak].push(post);
+			acc[key].push(post);
 			if (req.body.ban_reason) {
 				//send banmessage over websocket
 				Socketio.emitRoom(`${post.board}-${post.thread || post.postId}`, 'markPost', {
@@ -32,32 +36,45 @@ module.exports = async (req, res) => {
 			}
 			return acc;
 		}, {});
-		for (let ip in ipPosts) {
+		for (let key in ipPosts) {
+			if (addressBans && !key) {
+				continue; //a deposit post always carries an address
+			}
 			//should we at some point filter these to not bother banning pruned ips?
-			const thisIpPosts = ipPosts[ip];
+			const thisIpPosts = ipPosts[key];
+			const thisPost = thisIpPosts[0];
 			let banRange = 0;
-			let banIp = {
-				cloak: thisIpPosts[0].ip.cloak,
-				raw: thisIpPosts[0].ip.raw,
-				type: thisIpPosts[0].ip.type,
-			};
-			if (req.body.ban_h) {
-				banRange = 2;
-				banIp.cloak = thisIpPosts[0].ip.cloak
-					.split('.')
-					.slice(0,1)
-					.join('.');
-			} else if (req.body.ban_q) {
-				banRange = 1;
-				banIp.cloak = thisIpPosts[0].ip.cloak
-					.split('.')
-					.slice(0,2)
-					.join('.');
+			let banIp = addressBans && thisPost.address
+				? {
+					cloak: thisPost.address,
+					raw: thisPost.address,
+					type: 4, //deposit address
+				}
+				: {
+					cloak: thisPost.ip.cloak,
+					raw: thisPost.ip.raw,
+					type: thisPost.ip.type,
+				};
+			if (!addressBans) {
+				if (req.body.ban_h) {
+					banRange = 2;
+					banIp.cloak = thisPost.ip.cloak
+						.split('.')
+						.slice(0,1)
+						.join('.');
+				} else if (req.body.ban_q) {
+					banRange = 1;
+					banIp.cloak = thisPost.ip.cloak
+						.split('.')
+						.slice(0,2)
+						.join('.');
+				}
 			}
 			bans.push({
 				'global': req.body.global_ban != null,
 				'range': banRange,
 				'ip': banIp,
+				'address': addressBans ? thisPost.address.toLowerCase() : null,
 				'reason': banReason,
 				'board': banBoard,
 				'posts': req.body.preserve_post ? thisIpPosts : null,

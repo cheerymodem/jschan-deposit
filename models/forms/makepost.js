@@ -604,6 +604,12 @@ module.exports = async (req, res) => {
 
 	const successRedirect = `/${req.params.board}/${req.path.endsWith('/modpost') ? 'manage/' : ''}thread/${req.body.thread || postId}.html#${postId}`;
 
+	//attach any pending warnings so the poster sees them after submitting
+	let warnings = [];
+	if (res.locals.warnings && res.locals.warnings.length > 0) {
+		warnings = res.locals.warnings;
+	}
+
 	const buildOptions = {
 		'threadId': data.thread || postId,
 		'board': res.locals.board
@@ -616,7 +622,8 @@ module.exports = async (req, res) => {
 		//defer build and post will come live
 		res.json({
 			'postId': postId,
-			'redirect': successRedirect
+			'redirect': successRedirect,
+			'warnings': warnings,
 		});
 		buildQueue.push({
 			'task': 'buildThread',
@@ -628,7 +635,8 @@ module.exports = async (req, res) => {
 		if (req.headers['x-using-xhr'] != null) {
 			res.json({
 				'postId': postId,
-				'redirect': successRedirect
+				'redirect': successRedirect,
+				'warnings': warnings,
 			});
 		} else {
 			res.redirect(successRedirect);

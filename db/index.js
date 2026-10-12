@@ -18,5 +18,6 @@ module.exports = {
 	Bypass: require(__dirname+'/bypass.js'),
 	Deposits: require(__dirname+'/deposits.js'),
 	DepositSync: require(__dirname+'/depositsync.js'),
+	Warnings: require(__dirname+'/warnings.js'),
 
 };

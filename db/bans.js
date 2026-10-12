@@ -29,6 +29,16 @@ module.exports = {
 		}).toArray();
 	},
 
+	//bans keyed by wallet address (deposit boards). Precise match, no ranges.
+	findByAddress: (address, board) => {
+		return db.find({
+			'address': address.toLowerCase(),
+			'board': {
+				'$in': [board, null]
+			}
+		}).toArray();
+	},
+
 	get: (ids, board) => {
 		return db.find({
 			'board': board,

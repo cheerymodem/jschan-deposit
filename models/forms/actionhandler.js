@@ -107,6 +107,37 @@ module.exports = async (req, res, next) => {
 		messages.push(message);
 	}
 
+	//warnings: record a notice against the poster's wallet (deposit boards)
+	if (req.body.warn || req.body.global_warn) {
+		const { Warnings } = require(__dirname+'/../../db/');
+		const warnGlobal = req.body.global_warn == true;
+		const warnBoard = warnGlobal ? [null, req.params.board] : req.params.board;
+		const affectedPosters = res.locals.posts.map(p => p.address)
+			.filter(a => a && /^0x[a-f0-9]{40}$/.test(a));
+		const warnDate = new Date();
+		const warnExpiry = new Date(warnDate.getTime() + (req.body.ban_duration || 0));
+		const warnReason = req.body.ban_reason || req.body.log_message || __('No reason specified');
+		const warnings = [...new Set(affectedPosters)].map(address => ({
+			'address': address.toLowerCase(),
+			'global': warnGlobal,
+			'board': warnBoard,
+			'reason': warnReason,
+			'issuer': req.session.user,
+			'date': warnDate,
+			'expireAt': warnExpiry,
+			'showUser': !req.body.hide_name,
+		}));
+		if (warnings.length > 0) {
+			const inserted = await Warnings.insertMany(warnings).then(r => r.insertedCount);
+			if (warnGlobal) {
+				modlogActions.push(ModlogActions.GLOBAL_WARN);
+			} else {
+				modlogActions.push(ModlogActions.WARN);
+			}
+			messages.push(__n('Warned %s poster(s)', inserted));
+		}
+	}
+
 	if (deleting) {
 
 		//OP delete protection. for old OPs or with a lot of replies

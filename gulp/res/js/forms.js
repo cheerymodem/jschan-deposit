@@ -541,6 +541,15 @@ class postFormHandler {
 							window.myPostId = json.postId;
 						}
 
+						//deposit boards: show any pending warnings to the poster
+						if (json.warnings && json.warnings.length > 0) {
+							const warnList = json.warnings.map(w => (w.reason ? w.reason : __('Warning'))).join('\n');
+							doModal({
+								'title': __('Warnings'),
+								'message': warnList,
+							});
+						}
+
 						//get board and postId to add to (you)s
 						if (json.redirect) {
 							const redirectBoard = json.redirect.split('/')[1];

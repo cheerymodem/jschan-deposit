@@ -161,7 +161,7 @@ async function wipe() {
 	const defaultConfig = require(__dirname+'/configs/template.js.example');
 	await Mongo.setConfig(defaultConfig);
 
-	const collectionNames = ['accounts', 'bans', 'custompages', 'boards', 'captcha', 'files',
+	const collectionNames = ['accounts', 'bans', 'warnings', 'custompages', 'boards', 'captcha', 'files',
 		'modlog', 'filters', 'news', 'posts', 'poststats', 'ratelimit', 'bypass', 'roles',
 		'deposits', 'depositsync'];
 	for (const name of collectionNames) {
@@ -171,7 +171,7 @@ async function wipe() {
 	}
 
 	const { Boards, Posts, Captchas, Ratelimits, News, CustomPages,
-		Accounts, Files, Stats, Modlogs, Filters, Bans, Bypass, Roles } = require(__dirname+'/db/');
+		Accounts, Files, Stats, Modlogs, Filters, Bans, Bypass, Roles, Warnings } = require(__dirname+'/db/');
 
 	//wipe db shit
 	await Promise.all([
@@ -183,6 +183,7 @@ async function wipe() {
 		Posts.deleteAll(),
 		Boards.deleteAll(),
 		Bans.deleteAll(),
+		Warnings.deleteAll(),
 		Files.deleteAll(),
 		Stats.deleteAll(),
 		Modlogs.deleteAll(),
@@ -210,7 +211,10 @@ async function wipe() {
 	await Files.db.createIndex({ 'count': 1 });
 	await Filters.db.createIndex({ 'board': 1 });
 	await Bans.db.createIndex({ 'ip.cloak': 1 , 'board': 1 });
+	await Bans.db.createIndex({ 'address': 1, 'board': 1 }, { 'sparse': true });
 	await Bans.db.createIndex({ 'expireAt': 1 }, { expireAfterSeconds: 0 }); //custom expiry, i.e. it will expire when current date > than this date
+	await Warnings.db.createIndex({ 'address': 1, 'board': 1 });
+	await Warnings.db.createIndex({ 'expireAt': 1 }, { expireAfterSeconds: 0 });
 	await Bypass.db.createIndex({ 'expireAt': 1 }, { expireAfterSeconds: 0 });
 	await Captchas.db.createIndex({ 'expireAt': 1 }, { expireAfterSeconds: 300 }); //captchas valid for 5 minutes
 	await Ratelimits.db.createIndex({ 'expireAt': 1 }, { expireAfterSeconds: 60 }); //per minute captcha ratelimit

@@ -13,12 +13,14 @@ mixin ban(ban, banpage)
 			else
 				a(href=`/${ban.board}/`) /#{ban.board}/
 		td= ban.reason
-		- const ip = viewRawIp === true ? ban.ip.raw : ban.ip.cloak;
-		if viewRawIp === true
+		- const ip = ban.address ? ban.address : (viewRawIp === true ? ban.ip.raw : ban.ip.cloak);
+		if ban.address
+			td #{ban.address}
+		else if viewRawIp === true
 			td #{ip}
 		else
 			td #{ip}#{'.*'.repeat(ban.range)}
-		td #{__(['IPV4', 'IPV6', 'Bypass', 'Pruned IP'][ban.ip.type])}
+		td #{__(['IPV4', 'IPV6', 'Bypass', 'Pruned IP', 'Deposit Address'][ban.ip.type])}
 		td #{__(['Single', 'Narrow', 'Wide'][ban.range])}
 		td #{(!banpage || ban.showUser === true) ? ban.issuer : __('Hidden User')}
 		- const banDate = new Date(ban.date);

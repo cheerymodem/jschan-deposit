@@ -11,7 +11,7 @@ const makePost = require(__dirname+'/../../models/forms/makepost.js')
 	, message = require(__dirname+'/../../lib/deposit/message.js')
 	, paramConverter = require(__dirname+'/../../lib/middleware/input/paramconverter.js')
 	, { checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js')
-		, { recover: web3EthAccountsRecover } = require('web3-eth-accounts');
+	, { recover: web3EthAccountsRecover } = require('web3-eth-accounts');
 
 //post-time deposit gate for deposit-required boards. Consumes the nonce, rebuilds
 //and verifies the signed message, then checks the twin. Sets res.locals.depositError

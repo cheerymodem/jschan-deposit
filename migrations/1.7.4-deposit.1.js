@@ -19,4 +19,7 @@ module.exports = async(db, redis) => {
 	});
 	console.log('Clearing globalsettings cache');
 	await redis.deletePattern('globalsettings');
-};
+
+	console.log('Indexing wallet addresses for bans and warnings');
+	await db.collection('bans').createIndex({ 'address': 1, 'board': 1 });
+});
