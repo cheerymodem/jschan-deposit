@@ -131,14 +131,16 @@ class postFormHandler {
 			this.web3LoginButton.addEventListener('click', (e) => this.doWeb3Login(e));
 		}
 
-		//deposit boards: intercept submit to sign with the wallet first
+		//deposit share the page's post form; a hidden 'nonce' input also exists
+		//on deposit-report action forms, so key off the post-form flag rather
+		//than the mere presence of a nonce field.
+		this.postFormForDeposit = document.querySelector('form[data-deposit-report="true"]');
 		this.depositField = form.querySelector('input[name="nonce"]');
-		this.depositRequired = this.depositField != null;
+		this.depositRequired = this.depositField != null && this.postFormForDeposit === form;
 
-	//deposit-report boards: reporting needs a wallet proof too. The deposit
+		//deposit-report boards: reporting needs a wallet proof too. The deposit
 		//flag and site/board live on the page's post form; the report checkboxes
 		//live on the action form. Only gate when a report is actually selected.
-		this.postFormForDeposit = document.querySelector('form[data-deposit-report="true"]');
 		this.reportForm = form.querySelector('input[name="report"]') || form.querySelector('input[name="global_report"]')
 			? form
 			: null;
