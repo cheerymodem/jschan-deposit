@@ -135,12 +135,13 @@ class postFormHandler {
 		this.depositField = form.querySelector('input[name="nonce"]');
 		this.depositRequired = this.depositField != null;
 
-		//deposit-report boards: reporting needs a wallet proof too. The deposit
-		//flag lives on the page's post form; the report checkboxes live on the
-		//action form, so look the deposit flag up document-wide.
-		this.isReportForm = !!form.querySelector('input[name="report"]');
-		this.depositReportRequired = this.isReportForm
-			&& document.querySelector('form[data-deposit-report="true"]') != null;
+	//deposit-report boards: reporting needs a wallet proof too. The deposit
+		//flag and site/board live on the page's post form; the report checkboxes
+		//live on the action form. Only gate when a report is actually selected.
+		this.postFormForDeposit = document.querySelector('form[data-deposit-report="true"]');
+		this.reportForm = form.querySelector('input[name="report"]') || form.querySelector('input[name="global_report"]')
+			? form
+			: null;
 
 		//if file input, attach listeners for adding files, drag+drop, etc
 		this.fileInput = form.querySelector('input[type="file"]');
@@ -434,7 +435,16 @@ class postFormHandler {
 			return this.doDepositSign(e);
 		}
 
-		//deposit-report boards: signing a report needs a fresh wallet proof too
+		//deposit-report boards: only require a report signature when a report
+		//(or global report) checkbox is actually selected for this submission
+		if (this.reportForm) {
+			const reportBox = this.reportForm.querySelector('input[name="report"]');
+			const globalReportBox = this.reportForm.querySelector('input[name="global_report"]');
+			this.depositReportRequired = this.postFormForDeposit != null
+				&& ((reportBox && reportBox.checked) || (globalReportBox && globalReportBox.checked));
+		} else {
+			this.depositReportRequired = false;
+		}
 		if (this.depositReportRequired && !this.depositReportSigned) {
 			e.preventDefault();
 			return this.doDepositReportSign(e);
