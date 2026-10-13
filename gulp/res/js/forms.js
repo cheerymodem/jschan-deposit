@@ -136,7 +136,7 @@ class postFormHandler {
 		//than the mere presence of a nonce field.
 		this.postFormForDeposit = document.querySelector('form[data-deposit-report="true"]');
 		this.depositField = form.querySelector('input[name="nonce"]');
-		this.depositRequired = this.depositField != null && this.postFormForDeposit === form;
+		this.depositRequired = window.depositGate.requiresPostSign(this.postFormForDeposit === form, this.depositField != null);
 
 		//deposit-report boards: reporting needs a wallet proof too. The deposit
 		//flag and site/board live on the page's post form; the report checkboxes
@@ -442,8 +442,10 @@ class postFormHandler {
 		if (this.reportForm) {
 			const reportBox = this.reportForm.querySelector('input[name="report"]');
 			const globalReportBox = this.reportForm.querySelector('input[name="global_report"]');
-			this.depositReportRequired = this.postFormForDeposit != null
-				&& ((reportBox && reportBox.checked) || (globalReportBox && globalReportBox.checked));
+			this.depositReportRequired = window.depositGate.requiresReportSign(
+				this.postFormForDeposit != null,
+				!!(reportBox && reportBox.checked),
+				!!(globalReportBox && globalReportBox.checked));
 		} else {
 			this.depositReportRequired = false;
 		}

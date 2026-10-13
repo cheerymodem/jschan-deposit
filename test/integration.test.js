@@ -7,4 +7,5 @@ describe('run integration tests', () => {
 	require('./pages.js')();
 	require('./cleanup.js')();
 	require('./twofactor.js')();
+	require('./deposit.js')();
 });
