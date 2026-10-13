@@ -321,28 +321,39 @@ module.exports = async (req, res, next) => {
 			messages.push(message);
 		}
 
-		//moderator confiscation of the deposit of spam reporters on a deposit board
+		//moderator confiscation on a deposit board: confiscate the deposits of
+		//spam reporters and/or of the authors of the selected (reported) posts
 		if (res.locals.board && res.locals.board.settings.requireDeposit === true
-			&& (req.body.confiscate_reporters || req.body.global_confiscate_reporters)) {
-			const reporterAddresses = new Set();
-			const globalConfiscate = req.body.global_confiscate_reporters == true;
+			&& (req.body.confiscate_reporters || req.body.global_confiscate_reporters
+				|| req.body.confiscate_posts || req.body.global_confiscate_posts)) {
+			const addresses = new Set();
+			const globalConfiscate = req.body.global_confiscate_reporters == true || req.body.global_confiscate_posts == true;
 			for (const post of res.locals.posts) {
-				const reports = globalConfiscate ? (post.globalreports || []) : (post.reports || []);
-				for (const r of reports) {
-					if (r.address && req.body.checkedreports
-						&& req.body.checkedreports.includes(r.id.toString())) {
-						reporterAddresses.add(r.address.toLowerCase());
+				//confiscate the reported post's author
+				if (req.body.confiscate_posts || req.body.global_confiscate_posts) {
+					if (post.address && /^0x[a-f0-9]{40}$/.test(post.address)) {
+						addresses.add(post.address.toLowerCase());
+					}
+				}
+				//confiscate the checked reporters
+				if (req.body.confiscate_reporters || req.body.global_confiscate_reporters) {
+					const reports = globalConfiscate ? (post.globalreports || []) : (post.reports || []);
+					for (const r of reports) {
+						if (r.address && req.body.checkedreports
+							&& req.body.checkedreports.includes(r.id.toString())) {
+							addresses.add(r.address.toLowerCase());
+						}
 					}
 				}
 			}
-			for (const address of reporterAddresses) {
+			for (const address of addresses) {
 				const txHash = `confiscate:${address}:${Date.now()}`;
-				const stripped = await tombstone.confiscateFor(address, txHash, null, __('Reported spam: %s', req.body.log_message || __('confiscated')));
+				const stripped = await tombstone.confiscateFor(address, txHash, null, __('Confiscated deposit: %s', req.body.log_message || __('moderator action')));
 				await require(__dirname+'/../../db/').Deposits.delete(address);
 				if (stripped > 0) {
-					messages.push(__('Confiscated deposit for reporter %s (%s posts removed)', address, stripped));
+					messages.push(__('Confiscated deposit for %s (%s posts removed)', address, stripped));
 				} else {
-					messages.push(__('Confiscated deposit for reporter %s', address));
+					messages.push(__('Confiscated deposit for %s', address));
 				}
 			}
 			buildQueue.push({

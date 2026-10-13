@@ -346,8 +346,8 @@ class postFormHandler {
 			}
 			const messageContent = [
 				'jschan-deposit report',
-				`Site: ${this.form.dataset.site}`,
-				`Board: ${this.form.dataset.board}`,
+				`Site: ${this.postFormForDeposit ? this.postFormForDeposit.dataset.site : ''}`,
+				`Board: ${this.postFormForDeposit ? this.postFormForDeposit.dataset.board : ''}`,
 				`Nonce: ${nonce}`,
 			].join('\n');
 			const signature = await window.ethereum.request({
