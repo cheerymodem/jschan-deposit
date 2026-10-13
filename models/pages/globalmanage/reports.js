@@ -20,6 +20,13 @@ module.exports = async (req, res, next) => {
 
 	res.set('Cache-Control', 'private, max-age=5');
 
+	//deposit-board reports carry a wallet address on the post or the reports, so
+	//global staff can confiscate the involved deposits. Compute any presence here;
+	//the global footer has no single board to key the UI off.
+	const hasDepositReports = reports.some(post =>
+		(post.address && /^0x[a-f0-9]{40}$/.test(post.address))
+		|| (post.globalreports || []).some(r => r && r.address && /^0x[a-f0-9]{40}$/.test(r.address)));
+
 	if (req.path.endsWith('/reports.json')) {
 		res.json({
 			reports,
@@ -36,6 +43,7 @@ module.exports = async (req, res, next) => {
 			page,
 			ip: ipMatch ? req.query.ip : null,
 			queryString,
+			hasDepositReports,
 		});
 	}
 

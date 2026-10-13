@@ -321,31 +321,18 @@ module.exports = async (req, res, next) => {
 			messages.push(message);
 		}
 
-		//moderator confiscation on a deposit board: confiscate the deposits of
-		//spam reporters and/or of the authors of the selected (reported) posts
-		if (res.locals.board && res.locals.board.settings.requireDeposit === true
-			&& (req.body.confiscate_reporters || req.body.global_confiscate_reporters
-				|| req.body.confiscate_posts || req.body.global_confiscate_posts)) {
-			const addresses = new Set();
-			const globalConfiscate = req.body.global_confiscate_reporters == true || req.body.global_confiscate_posts == true;
-			for (const post of res.locals.posts) {
-				//confiscate the reported post's author
-				if (req.body.confiscate_posts || req.body.global_confiscate_posts) {
-					if (post.address && /^0x[a-f0-9]{40}$/.test(post.address)) {
-						addresses.add(post.address.toLowerCase());
-					}
-				}
-				//confiscate the checked reporters
-				if (req.body.confiscate_reporters || req.body.global_confiscate_reporters) {
-					const reports = globalConfiscate ? (post.globalreports || []) : (post.reports || []);
-					for (const r of reports) {
-						if (r.address && req.body.checkedreports
-							&& req.body.checkedreports.includes(r.id.toString())) {
-							addresses.add(r.address.toLowerCase());
-						}
-					}
-				}
-			}
+		//moderator confiscation on deposit boards: confiscate the deposits of
+		//spam reporters and/or of the authors of the selected (reported) posts.
+		//Works for both board-level (res.locals.board set) and global actions
+		//(no single board); the UI is gated per-data but the handler always
+		//re-checks that each address is a valid deposit address actually present
+		//in the selected posts.
+		if (req.body.confiscate_posts || req.body.global_confiscate_posts
+			|| req.body.confiscate_reporters || req.body.global_confiscate_reporters) {
+			const collectConfiscationAddresses = require(__dirname+'/../../lib/deposit/confiscateaddresses.js');
+			const globalConfiscate = !!(req.body.global_confiscate_reporters || req.body.global_confiscate_posts);
+			const addresses = collectConfiscationAddresses(res.locals.posts, req.body, req.body.checkedreports, globalConfiscate);
+			const affectedBoards = new Set(res.locals.posts.map(p => p.board));
 			for (const address of addresses) {
 				const txHash = `confiscate:${address}:${Date.now()}`;
 				const stripped = await tombstone.confiscateFor(address, txHash, null, __('Confiscated deposit: %s', req.body.log_message || __('moderator action')));
@@ -356,14 +343,18 @@ module.exports = async (req, res, next) => {
 					messages.push(__('Confiscated deposit for %s', address));
 				}
 			}
-			buildQueue.push({
-				'task': 'buildModLog',
-				'options': { 'board': res.locals.board },
-			});
-			buildQueue.push({
-				'task': 'buildModLogList',
-				'options': { 'board': res.locals.board },
-			});
+			if (addresses.size > 0) {
+				for (const boardId of affectedBoards) {
+					buildQueue.push({
+						'task': 'buildModLog',
+						'options': { 'board': { '_id': boardId, 'settings': {} } },
+					});
+					buildQueue.push({
+						'task': 'buildModLogList',
+						'options': { 'board': { '_id': boardId, 'settings': {} } },
+					});
+				}
+			}
 		}
 
 	}

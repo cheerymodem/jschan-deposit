@@ -26,7 +26,7 @@ details.toggle-label#actionform
 		label
 			input.post-check(type='checkbox', name='global_report_ban' value='1')
 			| #{__('Global Ban Reporters')}
-		if deposit && deposit.enabled && board.settings && board.settings.requireDeposit
+		if deposit && deposit.enabled && hasDepositReports
 			label
 				input.post-check(type='checkbox', name='confiscate_reporters' value='1')
 				| #{__('Confiscate Reporter Deposits')}
