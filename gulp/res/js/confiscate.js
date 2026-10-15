@@ -64,7 +64,7 @@
 		const amount = await getAmount();
 		const amountText = amount != null ? ` (${amount})` : '';
 		if (!window.confirm(__('Confiscate the deposit for key %s%s? This removes their posts and writes a public log.', short(address), amountText))) {
-			return false;
+			return null; //cancelled; caller stops without sending anything
 		}
 		//confiscate(address): selector 0x44f252a0 + 32-byte padded address
 		const txHash = await window.ethereum.request({
@@ -109,6 +109,10 @@
 		}
 		try {
 			const txHash = await confirmAndSend(address);
+			//user cancelled the confirm; do not proceed
+			if (txHash == null) {
+				return;
+			}
 			const res = await fetch('/forms/global/confiscate', {
 				method: 'POST',
 				headers: {
