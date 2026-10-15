@@ -26,19 +26,13 @@ module.exports = {
 
 		res.locals.actions = actionChecker(req, res);
 
-		//confiscating a reporter targets the checked reports, not the parent
-		//posts. Allow it without the usual 'must select a post' requirement and
-		//derive the affected posts from the checked report ids below.
-		const reporterOnlyConfiscate = !!(req.body.confiscate_reporters || req.body.global_confiscate_reporters)
-			&& !req.body.globalcheckedposts;
-
 		const errors = await checkSchema([
-			{ result: (reporterOnlyConfiscate ? lengthBody(req.body.checkedreports, 1) : lengthBody(req.body.globalcheckedposts, 1)), expected: false, blocking: true, error: reporterOnlyConfiscate ? __('Must select at least one report') : __('Must select at least one post') },
+			{ result: lengthBody(req.body.globalcheckedposts, 1), expected: false, blocking: true, error: __('Must select at least one post') },
 			{ result: lengthBody(res.locals.actions.validActions, 1), expected: false, blocking: true, error: __('No actions selected') },
 			{ result: lengthBody(req.body.globalcheckedposts, 1, globalLimits.multiInputs.posts.staff), expected: false, error: __('Must not select >%s posts per request', globalLimits.multiInputs.posts.staff) },
 			{ result: (existsBody(req.body.global_report_ban) && !req.body.checkedreports), expected: false, error: __('Must select post and reports to ban reporter') },
-			{ result: (existsBody(req.body.checkedreports) && !req.body.global_report_ban && !reporterOnlyConfiscate), expected: false, error: __('Must select a report action if checked reports') },
-			{ result: (existsBody(req.body.checkedreports) && !req.body.globalcheckedposts && !reporterOnlyConfiscate), expected: false, error: __('Must check parent post if checking reports for report action') },
+			{ result: (existsBody(req.body.checkedreports) && !req.body.global_report_ban), expected: false, error: __('Must select a report action if checked reports') },
+			{ result: (existsBody(req.body.checkedreports) && !req.body.globalcheckedposts), expected: false, error: __('Must check parent post if checking reports for report action') },
 			{ result: (existsBody(req.body.checkedreports) && req.body.globalcheckedposts
 				&& lengthBody(req.body.checkedreports, 1, req.body.globalcheckedposts.length*5)), expected: false, error: __('Invalid number of reports checked') },
 			{ result: (res.locals.actions.numGlobal > 0 && res.locals.actions.validActions.length <= res.locals.actions.numGlobal), expected: true, blocking: true, error: __('Invalid actions selected') },
@@ -60,17 +54,7 @@ module.exports = {
 
 		//get posts with global ids only
 		try {
-			if (reporterOnlyConfiscate) {
-				//confiscating reporters targets the checked reports; load the posts
-				//that own them so the handler can read their report addresses
-				res.locals.posts = await Posts.db.find({
-					'globalreports.id': {
-						'$in': req.body.checkedreports.map(id => require(__dirname+'/../../db/db.js').ObjectId(id)),
-					},
-				}).toArray();
-			} else {
-				res.locals.posts = await Posts.globalGetPosts(req.body.globalcheckedposts, true);
-			}
+			res.locals.posts = await Posts.globalGetPosts(req.body.globalcheckedposts, true);
 		} catch (err) {
 			return next(err);
 		}
