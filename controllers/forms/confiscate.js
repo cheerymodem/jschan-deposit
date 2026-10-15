@@ -22,7 +22,12 @@ const verifyReceipt = async (txHash, address, contractAddress) => {
 	if ((receipt.to || '').toLowerCase() !== contract) {
 		return null;
 	}
-	const owner = await client.owner();
+	let owner;
+	try {
+		owner = await client.owner();
+	} catch (e) {
+		return null;
+	}
 	if ((receipt.from || '').toLowerCase() !== owner.toLowerCase()) {
 		return null;
 	}

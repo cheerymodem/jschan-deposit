@@ -92,30 +92,34 @@ module.exports = async (req, res) => {
 
 	if (req.body.report_ban || req.body.global_report_ban) {
 		const banBoard = req.body.global_report_ban ? [null, req.params.board] : req.params.board;
+		//report bans key by address on deposit boards (reporters carry a verified
+		//wallet address), otherwise by IP like upstream
+		const reportAddressBans = res.locals.board && res.locals.board.settings.requireDeposit === true;
 		res.locals.posts.forEach(post => {
-			let ips = [];
+			let targets = [];
 			if (req.body.report_ban) {
-				const matches = post.reports.map(r => {
+				targets = targets.concat(post.reports.map(r => {
 					if (req.body.checkedreports.includes(r.id.toString())) {
-						return r.ip;
+						return reportAddressBans ? r.address : r.ip;
 					}
-				});
-				ips = ips.concat(matches);
+				}));
 			}
 			if (req.body.global_report_ban) {
-				const matches = post.globalreports.map(r => {
+				targets = targets.concat(post.globalreports.map(r => {
 					if (req.body.checkedreports.includes(r.id.toString())) {
-						return r.ip;
+						return reportAddressBans ? r.address : r.ip;
 					}
-				});
-				ips = ips.concat(matches);
+				}));
 			}
-			ips = ips.filter(n => n);
-			[...new Set(ips)].forEach(ip => {
+			targets = targets.filter(n => n);
+			[...new Set(targets.map(t => reportAddressBans ? t.toLowerCase() : t))].forEach(target => {
 				bans.push({
 					'global': req.body.global_report_ban != null,
 					'range': 0,
-					'ip': ip,
+					'ip': reportAddressBans
+						? { cloak: target, raw: target, type: 4 }
+						: target,
+					'address': reportAddressBans ? target : null,
 					'reason': banReason,
 					'board': banBoard,
 					'posts': null,

@@ -110,12 +110,15 @@ module.exports = async (req, res, next) => {
 	//warnings: record a notice against the poster's wallet (deposit boards)
 	if (req.body.warn || req.body.global_warn) {
 		const { Warnings } = require(__dirname+'/../../db/');
+		const { defaultBanDuration } = require(__dirname+'/../../lib/misc/config.js').get;
 		const warnGlobal = req.body.global_warn == true;
-		const warnBoard = warnGlobal ? [null, req.params.board] : req.params.board;
+		//global warnings apply across boards; store board as null so the
+		//findByAddress $in [board, null] match stays well-formed
+		const warnBoard = warnGlobal ? null : req.params.board;
 		const affectedPosters = res.locals.posts.map(p => p.address)
 			.filter(a => a && /^0x[a-f0-9]{40}$/.test(a));
 		const warnDate = new Date();
-		const warnExpiry = new Date(warnDate.getTime() + (req.body.ban_duration || 0));
+		const warnExpiry = new Date(warnDate.getTime() + (req.body.ban_duration || defaultBanDuration));
 		const warnReason = req.body.ban_reason || req.body.log_message || __('No reason specified');
 		const warnings = [...new Set(affectedPosters)].map(address => ({
 			'address': address.toLowerCase(),

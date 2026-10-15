@@ -28,10 +28,10 @@ details.toggle-label#actionform
 			| #{__('Global Ban Reporters')}
 		if deposit && deposit.enabled && hasDepositReports
 			label
-				input.post-check(type='checkbox', name='confiscate_reporters' value='1')
+				input.post-check(type='checkbox', name='global_confiscate_reporters' value='1')
 				| #{__('Confiscate Reporter Deposits')}
 			label
-				input.post-check(type='checkbox', name='confiscate_posts' value='1')
+				input.post-check(type='checkbox', name='global_confiscate_posts' value='1')
 				| #{__('Confiscate Poster Deposits')}
 		label
 			input.post-check(type='checkbox', name='global_ban' value='1')
