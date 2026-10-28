@@ -9,12 +9,53 @@ const { Permissions } = require(__dirname+'/../../lib/permission/permissions.js'
 	, { alphaNumericRegex, checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js')
 	, cache = require(__dirname+'/../../lib/redis/redis.js')
 	, { recover: web3EthAccountsRecover } = require('web3-eth-accounts')
-	, { isAddress: web3UtilsIsAddress } = require('web3-utils');
+	, { isAddress: web3UtilsIsAddress } = require('web3-utils')
+	, { Deposits } = require(__dirname+'/../../db/')
+	, registerMessage = require(__dirname+'/../../lib/deposit/register.js');
+
+//registering needs a wallet with an active deposit (it replaces the captcha, and
+//accounts can create boards). Password registrations sign a username-bound
+//message; web3 registrations already proved control of their address. Returns an
+//error message, or null if the wallet holds an active deposit.
+const checkRegisterDeposit = async (req, res) => {
+	const { __ } = res.locals;
+	if (config.get.deposit.enabled !== true) {
+		return __('Registration is unavailable while the deposit system is disabled');
+	}
+	let address;
+	if (res.locals.isWeb3) {
+		address = req.body.address.toLowerCase();
+	} else {
+		address = String(req.body.deposit_address || '').toLowerCase();
+		const nonce = String(req.body.deposit_nonce || '');
+		const signature = String(req.body.deposit_signature || '');
+		if (!/^0x[a-f0-9]{40}$/.test(address) || !nonce || !signature) {
+			return __('A wallet deposit signature is required to register');
+		}
+		if ((await cache.del(`nonce:${address}:${nonce}`)) !== 1) {
+			return __('Invalid or expired signature nonce. Refresh the page and try again');
+		}
+		let recovered;
+		try {
+			recovered = (await registerMessage.verify({ site: config.get.meta.url, username: req.body.username, nonce, signature })).toLowerCase();
+		} catch (e) {
+			return __('Failed to verify message signature');
+		}
+		if (recovered !== address) {
+			return __('Failed to verify message signature');
+		}
+	}
+	const twin = await Deposits.findOne({ _id: address });
+	if (!twin || twin.status !== 'active') {
+		return __('No active deposit found for this wallet');
+	}
+	return null;
+};
 
 module.exports = {
 
 	paramConverter: paramConverter({
-		trimFields: ['username', 'password', 'passwordconfirm', 'nonce', 'signature', 'address'],
+		trimFields: ['username', 'password', 'passwordconfirm', 'nonce', 'signature', 'address', 'deposit_nonce', 'deposit_signature', 'deposit_address'],
 	}),
 
 	controller: async (req, res, next) => {
@@ -77,6 +118,14 @@ module.exports = {
 						'redirect': '/login.html'
 					});
 				}
+			}
+			const depositError = await checkRegisterDeposit(req, res);
+			if (depositError) {
+				return dynamicResponse(req, res, 400, 'message', {
+					'title': __('Bad Request'),
+					'error': depositError,
+					'redirect': '/register.html'
+				});
 			}
 			await registerAccount(req, res, next);
 		} catch (err) {

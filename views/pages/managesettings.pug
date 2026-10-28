@@ -123,10 +123,6 @@ block content
 														label.postform-style.ph-5
 															input(type='checkbox', name='enable_web3', value='true' checked=board.settings.enableWeb3)
 													.row
-														.label #{__('Require deposit')}
-														label.postform-style.ph-5
-															input(type='checkbox', name='require_deposit', value='true' checked=board.settings.requireDeposit)
-													.row
 														.label #{__('SFW')}
 														label.postform-style.ph-5
 															input(type='checkbox', name='sfw', value='true' checked=board.settings.sfw)
@@ -271,20 +267,12 @@ block content
 															option(value='1', selected=board.settings.lockMode === 1) #{__('Lock thread creation')}
 															option(value='2', selected=board.settings.lockMode === 2) #{__('Lock board')}
 													.row
-														.label #{__('Captcha Mode')}
-														select(name='captcha_mode')
-															option(value='0', selected=board.settings.captchaMode === 0) #{__('No Captcha')}
-															option(value='1', selected=board.settings.captchaMode === 1) #{__('Captcha for new thread')}
-															option(value='2', selected=board.settings.captchaMode === 2) #{__('Captcha for all posts')}
-													.row
 														.label #{__('PPH Trigger Threshold')}
 														input(type='number', name='pph_trigger', value=board.settings.pphTrigger)
 													.row
 														.label #{__('PPH Trigger Action')}
 														select(name='pph_trigger_action')
 															option(value='0', selected=board.settings.pphTriggerAction === 0) #{__('Do nothing')}
-															option(value='1', selected=board.settings.pphTriggerAction === 1) #{__('Enable captcha for new thread')}
-															option(value='2', selected=board.settings.pphTriggerAction === 2) #{__('Enable captcha for all posts')}
 															option(value='3', selected=board.settings.pphTriggerAction === 3) #{__('Lock thread creation')}
 															option(value='4', selected=board.settings.pphTriggerAction === 4) #{__('Lock board')}
 													.row
@@ -294,8 +282,6 @@ block content
 														.label #{__('TPH Trigger Action')}
 														select(name='tph_trigger_action')
 															option(value='0', selected=board.settings.tphTriggerAction === 0) #{__('Do nothing')}
-															option(value='1', selected=board.settings.tphTriggerAction === 1) #{__('Enable captcha for new thread')}
-															option(value='2', selected=board.settings.tphTriggerAction === 2) #{__('Enable captcha for all posts')}
 															option(value='3', selected=board.settings.tphTriggerAction === 3) #{__('Lock thread creation')}
 															option(value='4', selected=board.settings.tphTriggerAction === 4) #{__('Lock board')}
 													.row
@@ -304,12 +290,6 @@ block content
 															option(value='0', selected=board.settings.lockReset === 0) #{__('No change')}
 															option(value='1', selected=board.settings.lockReset === 1) #{__('Unlock board')}
 															option(value='2', selected=board.settings.lockReset === 2) #{__('Lock thread creation')}
-													.row
-														.label #{__('Trigger Reset Captcha Mode')}
-														select(name='captcha_reset')
-															option(value='0', selected=board.settings.captchaReset === 0) #{__('No change')}
-															option(value='1', selected=board.settings.captchaReset === 1) #{__('Captcha disabled')}
-															option(value='2', selected=board.settings.captchaReset === 2) #{__('Captcha for new thread')}
 													.row
 														.label #{__('Early 404')}
 														label.postform-style.ph-5

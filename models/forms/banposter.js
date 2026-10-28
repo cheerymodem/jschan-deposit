@@ -27,11 +27,10 @@ module.exports = async (req, res) => {
 
 	if (req.body.ban || req.body.global_ban) {
 		const banBoard = req.body.global_ban ? [null, req.params.board] : req.params.board;
-		//deposit boards ban by wallet address instead of IP
-		const addressBans = req.body.ban
-			&& res.locals.board && res.locals.board.settings.requireDeposit === true;
+		//posts signed with a deposit wallet are banned by that address (the
+		//poster's identity); unsigned posts (staff modposts) fall back to the IP
 		const ipPosts = res.locals.posts.reduce((acc, post) => {
-			const key = addressBans ? (post.address || '') : post.ip.cloak;
+			const key = post.address ? `address:${post.address.toLowerCase()}` : `ip:${post.ip.cloak}`;
 			if (!acc[key]) {
 				acc[key] = [];
 			}
@@ -47,21 +46,20 @@ module.exports = async (req, res) => {
 			return acc;
 		}, {});
 		for (let key in ipPosts) {
-			if (addressBans && !key) {
-				continue; //a deposit post always carries an address
-			}
 			//should we at some point filter these to not bother banning pruned ips?
 			const thisIpPosts = ipPosts[key];
 			const thisPost = thisIpPosts[0];
+			const banAddress = thisPost.address ? thisPost.address.toLowerCase() : null;
 			let banRange = 0;
-			let banIp = addressBans && thisPost.address
-				? addressBanIp(thisPost.address)
+			let banIp = banAddress
+				? addressBanIp(banAddress)
 				: {
 					cloak: thisPost.ip.cloak,
 					raw: thisPost.ip.raw,
 					type: thisPost.ip.type,
 				};
-			if (!addressBans) {
+			//ranges only make sense for IP bans
+			if (!banAddress) {
 				if (req.body.ban_h) {
 					banRange = 2;
 					banIp.cloak = thisPost.ip.cloak
@@ -80,7 +78,7 @@ module.exports = async (req, res) => {
 				'global': req.body.global_ban != null,
 				'range': banRange,
 				'ip': banIp,
-				'address': addressBans ? thisPost.address.toLowerCase() : null,
+				'address': banAddress,
 				'reason': banReason,
 				'board': banBoard,
 				'posts': req.body.preserve_post ? thisIpPosts : null,
@@ -98,34 +96,31 @@ module.exports = async (req, res) => {
 
 	if (req.body.report_ban || req.body.global_report_ban) {
 		const banBoard = req.body.global_report_ban ? [null, req.params.board] : req.params.board;
-		//report bans key by address on deposit boards (reporters carry a verified
-		//wallet address), otherwise by IP like upstream
-		const reportAddressBans = res.locals.board && res.locals.board.settings.requireDeposit === true;
+		//reporters who signed with a deposit wallet are banned by that address,
+		//older unsigned reports by IP like upstream
 		res.locals.posts.forEach(post => {
-			let targets = [];
+			let reports = [];
 			if (req.body.report_ban) {
-				targets = targets.concat(post.reports.map(r => {
-					if (req.body.checkedreports.includes(r.id.toString())) {
-						return reportAddressBans ? r.address : r.ip;
-					}
-				}));
+				reports = reports.concat(post.reports);
 			}
 			if (req.body.global_report_ban) {
-				targets = targets.concat(post.globalreports.map(r => {
-					if (req.body.checkedreports.includes(r.id.toString())) {
-						return reportAddressBans ? r.address : r.ip;
-					}
-				}));
+				reports = reports.concat(post.globalreports);
 			}
-			targets = targets.filter(n => n);
-			[...new Set(targets.map(t => reportAddressBans ? t.toLowerCase() : t))].forEach(target => {
+			const targets = {};
+			reports.filter(r => r && req.body.checkedreports.includes(r.id.toString()))
+				.forEach(r => {
+					if (r.address) {
+						targets[`address:${r.address.toLowerCase()}`] = { ip: addressBanIp(r.address), address: r.address.toLowerCase() };
+					} else if (r.ip) {
+						targets[`ip:${r.ip.cloak}`] = { ip: r.ip, address: null };
+					}
+				});
+			Object.values(targets).forEach(target => {
 				bans.push({
 					'global': req.body.global_report_ban != null,
 					'range': 0,
-					'ip': reportAddressBans
-						? addressBanIp(target)
-						: target,
-					'address': reportAddressBans ? target : null,
+					'ip': target.ip,
+					'address': target.address,
 					'reason': banReason,
 					'board': banBoard,
 					'posts': null,

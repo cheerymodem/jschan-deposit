@@ -4,7 +4,7 @@ include ../mixins/filelabel.pug
 - const messageRequired = (!isThread && board.settings.forceThreadMessage) || (isThread && board.settings.forceReplyMessage);
 - const fileRequired = (!isThread && board.settings.forceThreadFile) || (isThread && board.settings.forceReplyFile);
 section.form-wrapper.flex-center
-	form.form-post#postform(action=`/forms/board/${board._id}/${modview ? 'mod' : ''}post`, enctype='multipart/form-data', method='POST' data-reset-on-submit='true' data-board=board._id data-site=meta.url data-deposit-report=(deposit && deposit.enabled && board.settings.requireDeposit ? 'true' : 'false'))
+	form.form-post#postform(action=`/forms/board/${board._id}/${modview ? 'mod' : ''}post`, enctype='multipart/form-data', method='POST' data-reset-on-submit='true' data-board=board._id data-site=meta.url data-deposit-report=(modview ? 'false' : 'true'))
 		if modview
 			input(type='hidden' name='_csrf' value=csrf)
 		input(type='hidden' name='thread' value=isThread ? thread.postId : null)
@@ -90,7 +90,8 @@ section.form-wrapper.flex-center
 				.label #{__('Web3')}
 				input.dummy-link.web3-sign(type='button' value=__('Sign') disabled=true)
 				textarea.ml-1.no-resize(name='signature', rows='1', autocomplete='off' readonly)
-		if deposit && deposit.enabled && board.settings.requireDeposit
+		//- every board needs a deposit; staff modposts are exempt server-side
+		unless modview
 			input(type='hidden' name='signature' value='')
 			input(type='hidden' name='address' value='')
 			input(type='hidden' name='nonce' value='')
@@ -98,15 +99,10 @@ section.form-wrapper.flex-center
 				.label #{__('Deposit')}
 				span.col
 					span #{__('This board requires a deposit. Posting signs a message with your wallet and is verified against the deposit contract.')}
-					if deposit.interfaceUrl
+					if deposit && deposit.interfaceUrl
 						- const depositLink = deposit.contractAddress ? `${deposit.interfaceUrl}${deposit.interfaceUrl.includes('?') ? '&' : '?'}contract=${encodeURIComponent(deposit.contractAddress)}` : deposit.interfaceUrl;
 						a.ml-1(href=depositLink rel='nofollow' referrerpolicy='same-origin' target='_blank') #{__('Deposit here')}
 			noscript
 				span #{__('Posting on this board requires JavaScript and a web3 wallet.')}
-		if ((board.settings.captchaMode === 1 && !isThread) || board.settings.captchaMode === 2) && !modview && !(deposit && deposit.enabled && board.settings.requireDeposit)
-			if captchaOptions.type === 'text'
-				include ./captchasidelabel.pug
-			else
-				include ./captchaexpand.pug
 		input#submitpost(type='submit', value=(isThread ? __('New Reply') : __('New Thread')))
 	a.collapse.no-decoration.post-button(href='#postform') [#{isThread ? __('New Reply') : __('New Thread')}]

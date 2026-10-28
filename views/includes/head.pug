@@ -49,10 +49,3 @@ if enableWeb3 || isBoard && board.settings.enableWeb3
 if deposit && deposit.enabled
 	meta(name='deposit-config' content=JSON.stringify({ chainId: deposit.chainId, contractAddress: deposit.contractAddress }))
 
-//- additional scripts included only if hcaptcha, recaptcha, or yandex smartcaptcha are used
-if captchaOptions.type === 'google'
-	script(src='https://www.google.com/recaptcha/api.js' async defer)
-if captchaOptions.type === 'hcaptcha'
-	script(src='https://hcaptcha.com/1/api.js' async defer)
-if captchaOptions.type === 'yandex'
-	script(src='https://smartcaptcha.yandexcloud.net/captcha.js' async defer)

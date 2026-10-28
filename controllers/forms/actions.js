@@ -9,24 +9,27 @@ const { Posts, Boards, Deposits } = require(__dirname+'/../../db/')
 	, paramConverter = require(__dirname+'/../../lib/middleware/input/paramconverter.js')
 	, { checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js');
 
-//validate a wallet-bound report proof on a deposit board: the submitted address
-//must have an active twin and the signature must recover to it over the
-//report-scoped message. No live RPC at request time (invariant 2).
+//validate a wallet-bound report proof: the submitted address must have an active
+//twin and the signature must recover to it over the report-scoped message. No
+//live RPC at request time (invariant 2). Staff actions via /modactions are exempt.
 const verifyReportDeposit = async (req, res) => {
 	const { __ } = res.locals;
 	const { deposit } = config.get;
-	const requireDeposit = res.locals.board && res.locals.board.settings.requireDeposit === true;
 	const isReport = existsBody(req.body.report) || existsBody(req.body.global_report);
-	if (!requireDeposit || deposit.enabled !== true || !isReport) {
+	if (!isReport || req.path.endsWith('/modactions')) {
 		res.locals.reportDepositError = null;
 		return true;
+	}
+	if (deposit.enabled !== true) {
+		res.locals.reportDepositError = __('Reporting is unavailable while the deposit system is disabled');
+		return false;
 	}
 
 	const address = String(req.body.address || '').toLowerCase();
 	const nonce = String(req.body.nonce || '');
 	const signature = String(req.body.signature || '');
 	if (!/^0x[a-fA-F0-9]{40}$/.test(address) || !nonce || !signature) {
-		res.locals.reportDepositError = __('A wallet deposit signature is required to report on this board');
+		res.locals.reportDepositError = __('A wallet deposit signature is required to report posts');
 		return false;
 	}
 

@@ -13,14 +13,13 @@ const express  = require('express')
 	, imageHashes = require(__dirname+'/../lib/middleware/file/imagehash.js')
 	, banCheck = require(__dirname+'/../lib/middleware/permission/bancheck.js')
 	, isLoggedIn = require(__dirname+'/../lib/middleware/permission/isloggedin.js')
-	, verifyCaptcha = require(__dirname+'/../lib/middleware/captcha/verify.js')
 	, csrf = require(__dirname+'/../lib/middleware/misc/csrfmiddleware.js')
 	, useSession = require(__dirname+'/../lib/middleware/permission/usesession.js')
 	, sessionRefresh = require(__dirname+'/../lib/middleware/permission/sessionrefresh.js')
 	, dnsblCheck = require(__dirname+'/../lib/middleware/ip/dnsbl.js')
 	, blockBypass = require(__dirname+'/../lib/middleware/captcha/blockbypass.js')
 	, fileMiddlewares = require(__dirname+'/../lib/middleware/file/filemiddlewares.js')
-	, { setBoardLanguage, setQueryLanguage } = require(__dirname+'/../lib/middleware/locale/locale.js')
+	, { setBoardLanguage } = require(__dirname+'/../lib/middleware/locale/locale.js')
 //controllers
 	, { deleteBoardController, editBansController, appealController, globalActionController, twofactorController,
 		actionController, addCustomPageController, deleteCustomPageController, addNewsController,
@@ -29,17 +28,17 @@ const express  = require('express')
 		resignController, deleteAccountController, loginController, registerController, changePasswordController,
 		deleteAccountsController, editAccountController, addFilterController, editFilterController, deleteFilterController, 
 		globalSettingsController, createBoardController, makePostController, addStaffController, deleteStaffController, 
-		editStaffController, editCustomPageController, editPostController, editRoleController, newCaptchaForm, 
-		blockBypassForm, logoutForm, deleteSessionsController, globalClearController, confiscateController } = require(__dirname+'/forms/index.js');
+		editStaffController, editCustomPageController, editPostController, editRoleController,
+		logoutForm, deleteSessionsController, globalClearController, confiscateController } = require(__dirname+'/forms/index.js');
 
 //make new post
 router.post('/board/:board/post', geoIp, processIp, useSession, sessionRefresh, Boards.exists, setBoardLanguage, calcPerms, banCheck, fileMiddlewares.posts,
-	makePostController.paramConverter, verifyCaptcha, numFiles, blockBypass.middleware, dnsblCheck, imageHashes, makePostController.controller);
+	makePostController.paramConverter, numFiles, blockBypass.middleware, dnsblCheck, imageHashes, makePostController.controller);
 router.post('/board/:board/modpost', geoIp, processIp, useSession, sessionRefresh, Boards.exists, setBoardLanguage, calcPerms, banCheck, isLoggedIn,
 	hasPerms.one(Permissions.MANAGE_BOARD_GENERAL), fileMiddlewares.posts, makePostController.paramConverter, csrf, numFiles, blockBypass.middleware, dnsblCheck, imageHashes, makePostController.controller); //mod post has token instead of captcha
 
 //post actions
-router.post('/board/:board/actions', geoIp, processIp, useSession, sessionRefresh, Boards.exists, setBoardLanguage, calcPerms, banCheck, actionController.paramConverter, verifyCaptcha, actionController.controller); //public, with captcha
+router.post('/board/:board/actions', geoIp, processIp, useSession, sessionRefresh, Boards.exists, setBoardLanguage, calcPerms, banCheck, actionController.paramConverter, actionController.controller); //public, reports need a deposit signature
 router.post('/board/:board/modactions', geoIp, processIp, useSession, sessionRefresh, csrf, Boards.exists, setBoardLanguage, calcPerms, banCheck, isLoggedIn,
 	hasPerms.one(Permissions.MANAGE_BOARD_GENERAL), actionController.paramConverter, actionController.controller); //board manage page
 
@@ -47,7 +46,7 @@ router.post('/global/actions', geoIp, processIp, useSession, sessionRefresh, csr
 	hasPerms.one(Permissions.MANAGE_GLOBAL_GENERAL), globalActionController.paramConverter, globalActionController.controller); //global manage page
 
 //appeal ban
-router.post('/appeal', geoIp, processIp, useSession, sessionRefresh, appealController.paramConverter, verifyCaptcha, appealController.controller);
+router.post('/appeal', geoIp, processIp, useSession, sessionRefresh, appealController.paramConverter, appealController.controller);
 //edit post
 router.post('/editpost', geoIp, processIp, useSession, sessionRefresh, csrf, editPostController.paramConverter, Boards.bodyExists, setBoardLanguage, calcPerms,
 	hasPerms.any(Permissions.MANAGE_GLOBAL_GENERAL, Permissions.MANAGE_BOARD_GENERAL), editPostController.controller);
@@ -125,22 +124,19 @@ router.post('/global/clear', useSession, sessionRefresh, csrf, calcPerms, isLogg
 	hasPerms.one(Permissions.MANAGE_GLOBAL_SETTINGS), globalClearController.paramConverter, globalClearController.controller); //global clear
 
 //create board
-router.post('/create', geoIp, processIp, useSession, sessionRefresh, isLoggedIn, calcPerms, verifyCaptcha, createBoardController.paramConverter, createBoardController.controller);
+router.post('/create', geoIp, processIp, useSession, sessionRefresh, isLoggedIn, calcPerms, createBoardController.paramConverter, createBoardController.controller);
 
 //accounts
 router.post('/login', useSession, loginController.paramConverter, loginController.controller);
 router.post('/twofactor', useSession, sessionRefresh, csrf, calcPerms, isLoggedIn, twofactorController.paramConverter, twofactorController.controller);
 router.post('/logout', useSession, logoutForm);
-router.post('/register', geoIp, processIp, useSession, sessionRefresh, calcPerms, verifyCaptcha, registerController.paramConverter, registerController.controller);
-router.post('/changepassword', geoIp, processIp, useSession, sessionRefresh, verifyCaptcha, changePasswordController.paramConverter, changePasswordController.controller);
+router.post('/register', geoIp, processIp, useSession, sessionRefresh, calcPerms, registerController.paramConverter, registerController.controller);
+router.post('/changepassword', geoIp, processIp, useSession, sessionRefresh, changePasswordController.paramConverter, changePasswordController.controller);
 router.post('/resign', useSession, sessionRefresh, csrf, calcPerms, isLoggedIn, resignController.paramConverter, resignController.controller);
 router.post('/deleteaccount', useSession, sessionRefresh, csrf, calcPerms, isLoggedIn, deleteAccountController.paramConverter, deleteAccountController.controller);
 router.post('/deletesessions', useSession, sessionRefresh, csrf, calcPerms, isLoggedIn, deleteSessionsController.paramConverter, deleteSessionsController.controller);
 
-//removes captcha cookie, for refreshing for noscript users
-router.post('/newcaptcha', newCaptchaForm);
-//solve captcha for block bypass
-router.post('/blockbypass', geoIp, processIp, useSession, sessionRefresh, calcPerms, setQueryLanguage, verifyCaptcha, blockBypassForm);
+//no captcha routes: deposits replace captchas and block bypasses
 
 module.exports = router;
 

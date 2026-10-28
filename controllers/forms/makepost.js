@@ -14,22 +14,22 @@ const makePost = require(__dirname+'/../../models/forms/makepost.js')
 	, { checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js')
 	, { recover: web3EthAccountsRecover } = require('web3-eth-accounts');
 
-//post-time deposit gate for deposit-required boards. Consumes the nonce, rebuilds
+//post-time deposit gate, applied on every board. Consumes the nonce, rebuilds
 //and verifies the signed message, then checks the twin. Sets res.locals.depositError
 //and res.locals.depositAddress on success.
 const verifyDepositPost = async (req, res) => {
 	const { __ } = res.locals;
 	const { deposit } = config.get;
-	const requireDeposit = res.locals.board.settings.requireDeposit;
 
 	//staff posting via /modpost is exempt
 	if (req.path.endsWith('/modpost')) {
 		res.locals.depositError = null;
 		return true;
 	}
-	if (deposit.enabled !== true || requireDeposit !== true) {
-		res.locals.depositError = null;
-		return true;
+	//the deposit is the only gate, so a disabled deposit system means no posting
+	if (deposit.enabled !== true) {
+		res.locals.depositError = __('Posting is unavailable while the deposit system is disabled');
+		return false;
 	}
 
 	const address = String(req.body.address || '').toLowerCase();

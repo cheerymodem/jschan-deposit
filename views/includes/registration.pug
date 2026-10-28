@@ -1,5 +1,5 @@
 .form-wrapper.flex-center
-	form.form-post(action='/forms/register' method='POST' data-captcha-preload='true')
+	form.form-post(action='/forms/register' method='POST' data-deposit-sign='register' data-site=meta.url)
 		.row
 			.label #{__('Username')}
 			input(type='text', name='username', maxlength='50' pattern='[a-zA-Z0-9]+' required title=__('alphanumeric only'))
@@ -9,8 +9,18 @@
 		.row
 			.label #{__('Confirm Password')}
 			input(type='password', name='passwordconfirm', maxlength='100' required)
-		if captchaOptions.type === 'text'
-			include ./captchasidelabel.pug
-		else
-			include ./captchafieldrow.pug
+		//- registering signs a message with a wallet that holds an active deposit. Not
+		//- named address/signature: those switch the controller to web3 registration.
+		input(type='hidden' name='deposit_signature' value='')
+		input(type='hidden' name='deposit_address' value='')
+		input(type='hidden' name='deposit_nonce' value='')
+		.row.jsonly
+			.label #{__('Deposit')}
+			span.col
+				span #{__('Registering signs a message with a wallet that holds an active deposit.')}
+				if deposit && deposit.interfaceUrl
+					- const depositLink = deposit.contractAddress ? `${deposit.interfaceUrl}${deposit.interfaceUrl.includes('?') ? '&' : '?'}contract=${encodeURIComponent(deposit.contractAddress)}` : deposit.interfaceUrl;
+					a.ml-1(href=depositLink rel='nofollow' referrerpolicy='same-origin' target='_blank') #{__('Deposit here')}
+		noscript
+			span #{__('Registering requires JavaScript and a web3 wallet.')}
 		input(type='submit', value=__('Register'))

@@ -330,7 +330,6 @@ module.exports = async (req, res) => {
 			customFlags: booleanSetting(req.body.board_defaults_custom_flags, oldSettings.boardDefaults.customFlags),
 			geoFlags: booleanSetting(req.body.board_defaults_geo_flags, oldSettings.boardDefaults.geoFlags),
 			enableTegaki: booleanSetting(req.body.board_defaults_enable_tegaki, oldSettings.boardDefaults.enableTegaki),
-			requireDeposit: booleanSetting(req.body.board_defaults_require_deposit, oldSettings.boardDefaults.requireDeposit),
 			userPostDelete: booleanSetting(req.body.board_defaults_user_post_delete, oldSettings.boardDefaults.userPostDelete),
 			userPostSpoiler: booleanSetting(req.body.board_defaults_user_post_spoiler, oldSettings.boardDefaults.userPostSpoiler),
 			userPostUnlink: booleanSetting(req.body.board_defaults_user_post_unlink, oldSettings.boardDefaults.userPostUnlink),

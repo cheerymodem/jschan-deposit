@@ -2,7 +2,7 @@
 
 //Deposit end-to-end flows against a running instance: a local Hardhat network
 //with the DamageDeposit contract deployed, the app on localhost, and a /test/
-//board with requireDeposit on. Reads the same env the storage-walk test uses.
+//deposit board (every board is). Reads the same env the storage-walk test uses.
 //Entire suite is skipped unless DEPOSIT_TEST_RPC/DEPOSIT_TEST_CONTRACT are set.
 const fetch = require('node-fetch');
 const FormData = require('form-data');

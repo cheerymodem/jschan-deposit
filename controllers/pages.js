@@ -5,8 +5,6 @@ const express  = require('express')
 	, Boards = require(__dirname+'/../db/boards.js')
 	, Posts = require(__dirname+'/../db/posts.js')
 	//middlewares
-	, processIp = require(__dirname+'/../lib/middleware/ip/processip.js')
-	, geoIp = require(__dirname+'/../lib/middleware/ip/geoip.js')
 	, calcPerms = require(__dirname+'/../lib/middleware/permission/calcpermsmiddleware.js')
 	, { Permissions } = require(__dirname+'/../lib/permission/permissions.js')
 	, hasPerms = require(__dirname+'/../lib/middleware/permission/haspermsmiddleware.js')
@@ -15,16 +13,15 @@ const express  = require('express')
 	, useSession = require(__dirname+'/../lib/middleware/permission/usesession.js')
 	, sessionRefresh = require(__dirname+'/../lib/middleware/permission/sessionrefresh.js')
 	, csrf = require(__dirname+'/../lib/middleware/misc/csrfmiddleware.js')
-	, setMinimal = require(__dirname+'/../lib/middleware/misc/setminimal.js')
-	, { setBoardLanguage, setQueryLanguage } = require(__dirname+'/../lib/middleware/locale/locale.js')
+	, { setBoardLanguage } = require(__dirname+'/../lib/middleware/locale/locale.js')
 	//page models
 	, { manageRecent, manageReports, manageAssets, manageSettings, manageBans, manageFilters, editFilter, editCustomPage, manageMyPermissions,
 		manageBoard, manageThread, manageLogs, manageCatalog, manageCustomPages, manageStaff, editStaff, editPost } = require(__dirname+'/../models/pages/manage/')
 	, { globalManageSettings, globalManageReports, globalManageBans, globalManageBoards, globalManageFilters, globalEditFilter, editNews, editAccount, editRole,
 		globalManageRecent, globalManageAccounts, globalManageNews, globalManageLogs, globalManageRoles, globalManageDeposits } = require(__dirname+'/../models/pages/globalmanage/')
-	, { changePassword, blockBypass, home, register, login, create, myPermissions, sessions, setupTwoFactor,
-		board, catalog, banners, boardSettings, globalSettings, randombanner, news, captchaPage, overboard, overboardCatalog,
-		captcha, thread, modlog, modloglist, account, boardlist, customPage, csrfPage, noncePage } = require(__dirname+'/../models/pages/')
+	, { changePassword, home, register, login, create, myPermissions, sessions, setupTwoFactor,
+		board, catalog, banners, boardSettings, globalSettings, randombanner, news, overboard, overboardCatalog,
+		thread, modlog, modloglist, account, boardlist, customPage, csrfPage, noncePage } = require(__dirname+'/../models/pages/')
 	, threadParamConverter = paramConverter({ processThreadIdParam: true })
 	, logParamConverter = paramConverter({ processDateParam: true })
 	, filterParamConverter = paramConverter({ objectIdParams: ['filterid'] })
@@ -124,12 +121,6 @@ router.get('/globalmanage/editaccount/:accountusername([a-zA-Z0-9]{1,50}).html',
 	hasPerms.one(Permissions.MANAGE_GLOBAL_ACCOUNTS), csrf, editAccount);
 router.get('/globalmanage/editrole/:roleid([a-f0-9]{24}).html', useSession, sessionRefresh, isLoggedIn, calcPerms,
 	hasPerms.one(Permissions.MANAGE_GLOBAL_ROLES), csrf, roleParamConverter, editRole);
-
-//captcha
-router.get('/captcha', geoIp, processIp, captcha); //get captcha image and cookie
-router.get('/captcha.html', captchaPage); //iframed for noscript users
-router.get('/bypass.html', blockBypass); //block bypass page
-router.get('/bypass_minimal.html', setMinimal, setQueryLanguage, blockBypass); //block bypass page
 
 //accounts
 router.get('/account.html', useSession, sessionRefresh, isLoggedIn, calcPerms, csrf, account); //page showing boards you are mod/owner of, links to password rese, logout, etc

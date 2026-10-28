@@ -2,7 +2,9 @@
 
 This is a modified version of [jschan](https://gitgud.io/fatchan/jschan/) that gates posting behind
 a DamageDeposit smart contract deposit. See [upstream](https://gitgud.io/fatchan/jschan) for
-the original AGPLv3 source.
+the original AGPLv3 source. Every board requires a deposit, and the upstream captchas and block
+bypasses are disabled: reports and account registration are signed by a deposit wallet instead,
+so the captcha items in the upstream feature list below do not apply.
 
 jschan — Anonymous imageboard software that doesn't suck.
 

@@ -22,14 +22,10 @@ block content
 									include ../includes/registration.pug
 							.tab.tab-2.jsonly.web3
 								.form-wrapper.flex-center
-									form.form-post(action='/forms/register' method='POST' data-captcha-preload='true')
+									form.form-post(action='/forms/register' method='POST')
 										input(type='hidden' name='nonce')
 										input(type='hidden' name='address')
 										input(type='hidden' name='signature')
-										if captchaOptions.type === 'text'
-											include ../includes/captchasidelabel.pug
-										else
-											include ../includes/captchafieldrow.pug
 										.postform-style.dummy-link.web3-login.ct-r1.ph-5
 											img(src='/file/metamask-fox.svg' width=24 height=24)
 											| #{__('Register with MetaMask')}

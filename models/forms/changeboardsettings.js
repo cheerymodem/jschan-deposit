@@ -33,7 +33,6 @@ const { Boards, Posts, Modlogs } = require(__dirname+'/../../db/')
 		'enableTegaki': ['board', 'threads', 'catalog'],
 		'hideBanners': ['board', 'threads', 'catalog'],
 		'enableWeb3': ['board', 'threads', 'catalog'],
-		'requireDeposit': ['board', 'threads', 'catalog'],
 	});
 
 module.exports = async (req, res) => {
@@ -77,7 +76,6 @@ module.exports = async (req, res) => {
 		'customFlags': booleanSetting(req.body.custom_flags),
 		'enableTegaki': booleanSetting(req.body.enable_tegaki),
 		'enableWeb3': booleanSetting(req.body.enable_web3),
-		'requireDeposit': booleanSetting(req.body.require_deposit),
 		'forceAnon': booleanSetting(req.body.force_anon),
 		'sageOnlyEmail': booleanSetting(req.body.sage_only_email),
 		'userPostDelete': booleanSetting(req.body.user_post_delete),
@@ -90,9 +88,7 @@ module.exports = async (req, res) => {
 		'forceThreadSubject': booleanSetting(req.body.force_thread_subject),
 		'disableReplySubject': booleanSetting(req.body.disable_reply_subject),
 		'hideBanners': booleanSetting(req.body.hide_banners),
-		//deposit boards replace the captcha, but only while the deposit system is enabled
-		'captchaMode': ((booleanSetting(req.body.require_deposit) && config.get.deposit && config.get.deposit.enabled === true)
-			? 0 : numberSetting(req.body.captcha_mode, oldSettings.captchaMode)),
+		'captchaMode': numberSetting(req.body.captcha_mode, oldSettings.captchaMode),
 		'tphTrigger': numberSetting(req.body.tph_trigger, oldSettings.tphTrigger),
 		'tphTriggerAction': numberSetting(req.body.tph_trigger_action, oldSettings.tphTriggerAction),
 		'pphTrigger': numberSetting(req.body.pph_trigger, oldSettings.pphTrigger),

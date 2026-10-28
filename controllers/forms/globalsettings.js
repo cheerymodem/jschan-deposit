@@ -5,7 +5,6 @@ const changeGlobalSettings = require(__dirname+'/../../models/forms/changeglobal
 	, themeHelper = require(__dirname+'/../../lib/misc/themes.js')
 	, config = require(__dirname+'/../../lib/misc/config.js')
 	, { Accounts } = require(__dirname+'/../../db/')
-	, { fontPaths } = require(__dirname+'/../../lib/misc/fonts.js')
 	, paramConverter = require(__dirname+'/../../lib/middleware/input/paramconverter.js')
 	, i18n = require(__dirname+'/../../lib/locale/locale.js')
 	, doTwoFactor = require(__dirname+'/../../lib/misc/dotwofactor.js')
@@ -116,28 +115,10 @@ module.exports = {
 				: false, expected: false, error: __('Meta url and site name must be set to enable webring') },
 			{ result: inArrayBody(req.body.language, i18n.getLocales()), expected: true, error: __('Invalid language') },
 			{ result: inArrayBody(req.body.board_defaults_language, i18n.getLocales()), expected: true, error: __('Invalid language') },
-			{ result: inArrayBody(req.body.captcha_options_type, ['grid', 'grid2', 'text', 'google', 'hcaptcha', 'yandex']), expected: true, error: __('Invalid captcha options type') },
-			{ result: numberBody(req.body.captcha_options_generate_limit, 1), expected: true, error: __('Captcha options generate limit must be a number > 0') },
-			{ result: numberBody(req.body.captcha_options_grid_size, 2, 6), expected: true, error: __('Captcha options grid size must be a number from 2-6') },
-			{ result: numberBody(req.body.captcha_options_grid_image_size, 50, 500), expected: true, error: __('Captcha options grid image size must be a number from 50-500') },
-			{ result: numberBody(req.body.captcha_options_grid_icon_y_offset, 0, 50), expected: true, error: __('Captcha options icon y offset must be a number from 0-50') },
-			{ result: numberBody(req.body.captcha_options_num_distorts_min, 0, 10), expected: true, error: __('Captcha options min distorts must be a number from 0-10') },
-			{ result: numberBody(req.body.captcha_options_num_distorts_max, 0, 10), expected: true, error: __('Captcha options max distorts must be a number from 0-10') },
-			{ result: minmaxBody(req.body.captcha_options_num_distorts_min, req.body.captcha_options_num_distorts_max), expected: true, error: __('Captcha options distorts min must be less than max') },
-			{ result: numberBody(req.body.captcha_options_distortion, 0, 50), expected: true, error: __('Captcha options distortion must be a number from 0-50') },
-			{ result: inArrayBody(req.body.captcha_options_font, fontPaths), expected: true, error: __('Invalid captcha options font') },
-			{ result: numberBody(req.body.captcha_options_text_wave, 0, 10), expected: true, error: __('Captcha options text wave effect strength must be a number form 0-10') },
-			{ result: numberBody(req.body.captcha_options_text_paint, 0, 10), expected: true, error: __('Captcha options text paint effect strength must be a number from 0-10') },
-			{ result: numberBody(req.body.captcha_options_text_noise, 0, 10), expected: true, error: __('Captcha options text noise effect strength must be a number from 0-10') },
-			{ result: numberBody(req.body.captcha_options_grid_noise, 0, 10), expected: true, error: __('Captcha options grid noise effect strength must be a number from 0-10') },
-			{ result: numberBody(req.body.captcha_options_grid_edge, 0, 50), expected: true, error: __('Captcha options grid edge effect strength must be a number from 0-50') },
 			{ result: numberBody(req.body.dnsbl_cache_time), expected: true, error: __('Invalid dnsbl cache time') },
 			{ result: numberBody(req.body.flood_timers_same_content_same_ip), expected: true, error: __('Invalid flood time same content same ip') },
 			{ result: numberBody(req.body.flood_timers_same_content_any_ip), expected: true, error: __('Invalid flood time same contenet any ip') },
 			{ result: numberBody(req.body.flood_timers_any_content_same_ip), expected: true, error: __('Invalid flood time any content same ip') },
-			{ result: numberBody(req.body.block_bypass_expire_after_uses), expected: true, error: __('Block bypass expire after uses must be a number > 0') },
-			{ result: numberBody(req.body.block_bypass_expire_after_time), expected: true, error: __('Invalid block bypass expire after time') },
-			{ result: numberBody(req.body.rate_limit_cost_captcha, 1, 100), expected: true, error: __('Rate limit cost captcha must be a number from 1-100') },
 			{ result: numberBody(req.body.rate_limit_cost_board_settings, 1, 100), expected: true, error: __('Rate limit cost board settings must be a number from 1-100') },
 			{ result: numberBody(req.body.rate_limit_cost_edit_post, 1, 100), expected: true, error: __('Rate limit cost edit post must be a number from 1-100') },
 			{ result: numberBody(req.body.hot_threads_limit), expected: true, error: __('Invalid hot threads limit') },
@@ -208,12 +189,10 @@ module.exports = {
 			{ result: numberBody(req.body.board_defaults_lock_mode, 0, 2), expected: true, error: __('Board default lock mode must be a number from 0-2') },
 			{ result: numberBody(req.body.board_defaults_file_r9k_mode, 0, 2), expected: true, error: __('Board default file r9k mode must be a number from 0-2') },
 			{ result: numberBody(req.body.board_defaults_message_r9k_mode, 0, 2), expected: true, error: __('Board default message r9k mode must be a number from 0-2') },
-			{ result: numberBody(req.body.board_defaults_captcha_mode, 0, 2), expected: true, error: __('Board default captcha mode must be a number from 0-2') },
 			{ result: numberBody(req.body.board_defaults_tph_trigger), expected: true, error: __('Board default tph trigger must be a number') },
 			{ result: numberBody(req.body.board_defaults_pph_trigger), expected: true, error: __('Board default pph trigger must be a number') },
 			{ result: numberBody(req.body.board_defaults_pph_trigger_action, 0, 4), expected: true, error: __('Board default pph trigger action must be a number from 0-4') },
 			{ result: numberBody(req.body.board_defaults_tph_trigger_action, 0, 4), expected: true, error: __('Board default tph trigger action must be a number from 0-4') },
-			{ result: numberBody(req.body.board_defaults_captcha_reset, 0, 2), expected: true, error: __('Board defaults captcha reset must be a number from 0-2') },
 			{ result: numberBody(req.body.board_defaults_lock_reset, 0, 2), expected: true, error: __('Board defaults lock reset must be a number from 0-2') },
 			{ result: numberBodyVariable(req.body.board_defaults_reply_limit, globalLimits.replyLimit.min, req.body.global_limits_reply_limit_min, globalLimits.replyLimit.max, req.body.global_limits_reply_limit_max), expected: true, error: __('Board defaults reply limit must be within global limits') },
 			{ result: numberBodyVariable(req.body.board_defaults_thread_limit, globalLimits.threadLimit.min, req.body.global_limits_thread_limit_min, globalLimits.threadLimit.max, req.body.global_limits_thread_limit_max), expected: true, error: __('Board defaults thread limit must be within global limits') },

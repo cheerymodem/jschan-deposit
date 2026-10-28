@@ -61,14 +61,7 @@ module.exports = async (req, res) => {
 		'settings': {
 			name,
 			description,
-			...boardDefaults,
-			//a freshly created board that inherits requireDeposit can otherwise be
-			//left with no gate at all (no captcha and no working deposit) if the
-			//deposit system is not configured/enabled; keep the captcha on until
-			//deposit is actually active
-			captchaMode: (config.get.deposit && config.get.deposit.enabled === true && boardDefaults.requireDeposit === true)
-				? 0
-				: boardDefaults.captchaMode
+			...boardDefaults
 		}
 	};
 

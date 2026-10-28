@@ -6,8 +6,6 @@ ul.tabs.group
 	li
 		a(href='#tab-3') #{__('Limits')}
 	li
-		a(href='#tab-4') #{__('Captcha')}
-	li
 		a(href='#tab-5') #{__('Antispam')}
 	li
 		a(href='#tab-6') #{__('Style')}
@@ -307,104 +305,8 @@ ul.tabs.group
 				.label #{__('Multi Input Form Staff')}
 				input(type='number', name='global_limits_multi_input_posts_staff' value=settings.globalLimits.multiInputs.posts.staff)
 
-	.tab.tab-4
-		.col
-			.row
-				.label #{__('Type')}
-				select(name='captcha_options_type')
-					option(value='text', selected=settings.captchaOptions.type === 'text') #{__('Text')}
-					option(value='grid', selected=settings.captchaOptions.type === 'grid') #{__('Grid v1')}
-					option(value='grid2', selected=settings.captchaOptions.type === 'grid2') #{__('Grid v2')}
-					option(value='google', selected=settings.captchaOptions.type === 'google') #{__('Google')}
-					option(value='hcaptcha', selected=settings.captchaOptions.type === 'hcaptcha') #{__('Hcaptcha')}
-					option(value='yandex', selected=settings.captchaOptions.type === 'yandex') #{__('Yandex')}
-			.row
-				.label #{__('Generate Limit')}
-				input(type='number' name='captcha_options_generate_limit' value=settings.captchaOptions.generateLimit)
-			.row
-				.label #{__('Font')}
-				select(name='captcha_options_font')
-					option(value='default' selected=(settings.captchaOptions.font === 'default')) #{__('Default')}
-					each font in fontList
-							option(value=font.path selected=(settings.captchaOptions.font === font.path)) #{font.name}
-			.row
-				h4.mv-5 #{__('Text Captcha Options')}
-			.row
-				.label #{__('Strikethrough Effect')}
-				label.postform-style.ph-5
-					input(type='checkbox', name='captcha_options_text_line', value='true' checked=settings.captchaOptions.text.line)
-			.row
-				.label #{__('Wave Effect Strength')}
-				label.postform-style.ph-5
-					input(type='range' name='captcha_options_text_wave' min='0' max='10' value=settings.captchaOptions.text.wave)
-			.row
-				.label #{__('Paint Effect Strength')}
-				label.postform-style.ph-5
-					input(type='range' name='captcha_options_text_paint' min='0' max='10' value=settings.captchaOptions.text.paint)
-			.row
-				.label #{__('Noise Effect Strength')}
-				label.postform-style.ph-5
-					input(type='range' name='captcha_options_text_noise' min='0' max='10' value=settings.captchaOptions.text.noise)
-			.row
-				h4.mv-5 #{__('Grid Captcha Options')}
-			.row
-				.label #{__('Image Size')}
-				input(type='number' name='captcha_options_grid_image_size' value=settings.captchaOptions.grid.imageSize)
-			.row
-				.label #{__('Grid Size')}
-				input(type='number' name='captcha_options_grid_size' value=settings.captchaOptions.grid.size)
-			.row
-				.label #{__('Icon Offset')}
-				input(type='number' name='captcha_options_grid_icon_y_offset' value=settings.captchaOptions.grid.iconYOffset)
-			.row
-				.label #{__('True Characters')}
-				textarea(name='captcha_options_grid_trues' placeholder=__('Newline separated')) #{settings.captchaOptions.grid.trues.join('\n')}
-			.row
-				.label #{__('False Characters')}
-				textarea(name='captcha_options_grid_falses' placeholder=__('Newline separated')) #{settings.captchaOptions.grid.falses.join('\n')}
-			.row
-				.label #{__('Question Text')}
-				input(type='text' name='captcha_options_grid_question' value=settings.captchaOptions.grid.question)
-			.row
-				.label #{__('Edge Effect Strength')}
-				label.postform-style.ph-5
-					input(type='range' name='captcha_options_grid_edge' min='0' max='50' value=settings.captchaOptions.grid.edge)
-			.row
-				.label #{__('Noise Effect Strength')}
-				label.postform-style.ph-5
-					input(type='range' name='captcha_options_grid_noise' min='0' max='10' value=settings.captchaOptions.grid.noise)
-			.row
-				h4.mv-5 #{__('Captcha Distortion')}
-			.row
-				.label #{__('Minimum Distortions')}
-				input(type='number' name='captcha_options_num_distorts_min' value=settings.captchaOptions.numDistorts.min)
-			.row
-				.label #{__('Maximum Distortions')}
-				input(type='number' name='captcha_options_num_distorts_max' value=settings.captchaOptions.numDistorts.max)
-			.row
-				.label #{__('Distortion Intensity')}
-				input(type='number' name='captcha_options_distortion' value=settings.captchaOptions.distortion)
-
 	.tab.tab-5
 		.col
-			.row
-				.label #{__('Block Bypass')}
-				label.postform-style.ph-5
-					input(type='checkbox', name='block_bypass_enabled', value='true' checked=settings.blockBypass.enabled)
-			.row
-				.label #{__('Force Anonymizers')}
-				label.postform-style.ph-5
-					input(type='checkbox', name='block_bypass_force_anonymizers', value='true' checked=settings.blockBypass.forceAnonymizers)
-			.row
-				.label #{__('Bypass DNSBL')}
-				label.postform-style.ph-5
-					input(type='checkbox', name='block_bypass_bypass_dnsbl', value='true' checked=settings.blockBypass.bypassDnsbl)
-			.row
-				.label #{__('Expire After Uses')}
-				input(type='number' name='block_bypass_expire_after_uses' value=settings.blockBypass.expireAfterUses)
-			.row
-				.label #{__('Expire After Time')}
-				input(type='text' name='block_bypass_expire_after_time' placeholder=__('e.g. 1d') value=settings.blockBypass.expireAfterTime)
 			.row
 				h4.mv-5 #{__('Flood Protection')}
 			.row
@@ -430,9 +332,6 @@ ul.tabs.group
 				input(type='text' name='dnsbl_cache_time' placeholder=__('e.g. 1h') value=settings.dnsbl.cacheTime)
 			.row
 				h4.mv-5 #{__('Ratelimits')}
-			.row
-				.label #{__('Generate Captcha')}
-				input(type='number' name='rate_limit_cost_captcha' value=settings.rateLimitCost.captcha)
 			.row
 				.label #{__('Change Board Settings')}
 				input(type='number' name='rate_limit_cost_board_settings' value=settings.rateLimitCost.boardSettings)
@@ -743,20 +642,12 @@ ul.tabs.group
 					option(value='1', selected=settings.boardDefaults.lockMode === 1) #{__('Lock Thread Creation')}
 					option(value='2', selected=settings.boardDefaults.lockMode === 2) #{__('Board Locked')}
 			.row
-				.label #{__('Captcha Mode')}
-				select(name='board_defaults_captcha_mode')
-					option(value='0', selected=settings.boardDefaults.captchaMode === 0) #{__('No Captcha')}
-					option(value='1', selected=settings.boardDefaults.captchaMode === 1) #{__('Captcha for new thread')}
-					option(value='2', selected=settings.boardDefaults.captchaMode === 2) #{__('Captcha for all posts')}
-			.row
 				.label #{__('PPH Trigger Threshold')}
 				input(type='number', name='board_defaults_pph_trigger', value=settings.boardDefaults.pphTrigger)
 			.row
 				.label #{__('PPH Trigger Action')}
 				select(name='board_defaults_pph_trigger_action')
 					option(value='0', selected=settings.boardDefaults.pphTriggerAction === 0) #{__('Do nothing')}
-					option(value='1', selected=settings.boardDefaults.pphTriggerAction === 1) #{__('Enable captcha for new thread')}
-					option(value='2', selected=settings.boardDefaults.pphTriggerAction === 2) #{__('Enable captcha for all posts')}
 					option(value='3', selected=settings.boardDefaults.pphTriggerAction === 3) #{__('Lock thread creation')}
 					option(value='4', selected=settings.boardDefaults.pphTriggerAction === 4) #{__('Lock board')}
 			.row
@@ -766,8 +657,6 @@ ul.tabs.group
 				.label #{__('TPH Trigger Action')}
 				select(name='board_defaults_tph_trigger_action')
 					option(value='0', selected=settings.boardDefaults.tphTriggerAction === 0) #{__('Do nothing')}
-					option(value='1', selected=settings.boardDefaults.tphTriggerAction === 1) #{__('Enable captcha for new thread')}
-					option(value='2', selected=settings.boardDefaults.tphTriggerAction === 2) #{__('Enable captcha for all posts')}
 					option(value='3', selected=settings.boardDefaults.tphTriggerAction === 3) #{__('Lock thread creation')}
 					option(value='4', selected=settings.boardDefaults.tphTriggerAction === 4) #{__('Lock board')}
 			.row
@@ -776,12 +665,6 @@ ul.tabs.group
 					option(value='0', selected=settings.boardDefaults.lockReset === 0) #{__('No change')}
 					option(value='1', selected=settings.boardDefaults.lockReset === 1) #{__('Unlock board')}
 					option(value='2', selected=settings.boardDefaults.lockReset === 2) #{__('Lock thread creation')}
-			.row
-				.label #{__('Trigger Reset Captcha Mode')}
-				select(name='board_defaults_captcha_reset')
-					option(value='0', selected=settings.boardDefaults.captchaReset === 0) #{__('No change')}
-					option(value='1', selected=settings.boardDefaults.captchaReset === 1) #{__('Captcha disabled')}
-					option(value='2', selected=settings.boardDefaults.captchaReset === 2) #{__('Captcha for new thread')}
 			.row
 				.label #{__('Anon Name')}
 				input(type='text' name='board_defaults_default_name' value=settings.boardDefaults.defaultName)
@@ -822,10 +705,6 @@ ul.tabs.group
 				.label #{__('Enable Web3')}
 				label.postform-style.ph-5
 					input(type='checkbox', name='board_defaults_enable_web3', value='true' checked=settings.boardDefaults.enableWeb3)
-			.row
-				.label #{__('Require deposit')}
-				label.postform-style.ph-5
-					input(type='checkbox', name='board_defaults_require_deposit', value='true' checked=settings.boardDefaults.requireDeposit)
 			.row
 				.label #{__('User Post Deletion')}
 				label.postform-style.ph-5

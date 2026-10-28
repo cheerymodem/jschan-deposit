@@ -87,7 +87,8 @@ panel. At minimum set:
 - `deposit.contractAddress` to the ETH variant address printed by `setupLocal.js`
 - `deposit.deployBlock` to the block the contract was deployed at
 
-Then create a board and turn on its `requireDeposit` board setting.
+Then create a board; every board requires a deposit. Registering an account also needs a
+signature from a wallet with an active deposit, so deposit before registering.
 
 ## MetaMask setup
 

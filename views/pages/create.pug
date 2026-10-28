@@ -6,7 +6,7 @@ block head
 block content
 	h1.board-title #{__('Create Board')}
 	.form-wrapper.flex-center.mv-10
-		form.form-post(action='/forms/create' method='POST' data-captcha-preload='true')
+		form.form-post(action='/forms/create' method='POST')
 			.row
 				.label #{__('URI e.g. /uri/')}
 				input(type='text', name='uri', maxlength=globalLimits.fieldLength.uri pattern='[a-zA-Z0-9]+' required title=__('alphanumeric only'))
@@ -19,9 +19,5 @@ block content
 			.row
 				.label #{__('Tags')}
 				textarea(name='tags' placeholder=__('Newline separated, max 10'))
-			if captchaOptions.type === 'text'
-				include ../includes/captchasidelabel.pug
-			else
-				include ../includes/captchafieldrow.pug
 			input(type='submit', value=__('Create'))
 

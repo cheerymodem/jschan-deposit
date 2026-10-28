@@ -146,6 +146,9 @@ class postFormHandler {
 			? form
 			: null;
 
+		//account registration signs a username-bound message with a deposit wallet
+		this.depositRegister = form.dataset.depositSign === 'register';
+
 		//if file input, attach listeners for adding files, drag+drop, etc
 		this.fileInput = form.querySelector('input[type="file"]');
 		if (this.fileInput) {
@@ -345,10 +348,13 @@ class postFormHandler {
 			if (!nonce) {
 				throw Error('Nonce request failed');
 			}
+			//site/board come from the action form's own nonce input, since pages
+			//such as threads at the reply limit have no post form
+			const { site, board } = this.form.querySelector('input[name="nonce"]').dataset;
 			const messageContent = [
 				'jschan-deposit report',
-				`Site: ${this.postFormForDeposit ? this.postFormForDeposit.dataset.site : ''}`,
-				`Board: ${this.postFormForDeposit ? this.postFormForDeposit.dataset.board : ''}`,
+				`Site: ${site}`,
+				`Board: ${board}`,
 				`Nonce: ${nonce}`,
 			].join('\n');
 			const signature = await window.ethereum.request({
@@ -365,6 +371,48 @@ class postFormHandler {
 			if (addressInput) { addressInput.value = address; }
 			if (nonceInput) { nonceInput.value = nonce; }
 			this.depositReportSigned = true;
+			this.formSubmit(e);
+		} catch (err) {
+			console.warn(err);
+			doModal({
+				'title': __('Deposit'),
+				'message': __('Failed to sign with your wallet.'),
+			});
+		}
+	}
+
+	//registration: sign a username-bound message with the deposit wallet, fill the
+	//deposit_* fields (plain address/signature would switch the server to web3
+	//registration), then submit
+	async doDepositRegisterSign(e) {
+		try {
+			if (!window.ethereum || !window.ethereum.request) {
+				return doModal({
+					'title': __('Deposit'),
+					'message': __('A web3 wallet is required to register.'),
+				});
+			}
+			const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+			const address = accounts[0].toLowerCase();
+			const nonceResponse = await fetch(`/nonce/${encodeURIComponent(address)}.json`).then(r => r.json());
+			const nonce = nonceResponse && nonceResponse.nonce;
+			if (!nonce) {
+				throw Error('Nonce request failed');
+			}
+			const messageContent = [
+				'jschan-deposit register',
+				`Site: ${this.form.dataset.site}`,
+				`Username: ${(this.form.elements.username.value || '').trim().toLowerCase()}`,
+				`Nonce: ${nonce}`,
+			].join('\n');
+			const signature = await window.ethereum.request({
+				method: 'personal_sign',
+				params: [messageContent, address],
+			});
+			this.form.elements.deposit_signature.value = signature;
+			this.form.elements.deposit_address.value = address;
+			this.form.elements.deposit_nonce.value = nonce;
+			this.depositRegisterSigned = true;
 			this.formSubmit(e);
 		} catch (err) {
 			console.warn(err);
@@ -448,7 +496,7 @@ class postFormHandler {
 			const reportBox = this.reportForm.querySelector('input[name="report"]');
 			const globalReportBox = this.reportForm.querySelector('input[name="global_report"]');
 			this.depositReportRequired = window.depositGate.requiresReportSign(
-				this.postFormForDeposit != null,
+				this.reportForm.querySelector('input[name="nonce"][data-site]') != null,
 				!!(reportBox && reportBox.checked),
 				!!(globalReportBox && globalReportBox.checked));
 		} else {
@@ -460,6 +508,14 @@ class postFormHandler {
 				return this.doDepositReportSign(e);
 			}
 			this.depositReportSigned = false;
+		}
+
+		if (this.depositRegister) {
+			if (!this.depositRegisterSigned) {
+				e.preventDefault();
+				return this.doDepositRegisterSign(e);
+			}
+			this.depositRegisterSigned = false;
 		}
 
 		//get the captcha response if any recaptcha

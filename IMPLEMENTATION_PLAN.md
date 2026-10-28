@@ -18,6 +18,7 @@ from the refundable deposit instead of identity.
 | Signing | Every post is signed (no posting sessions) |
 | Deposit check | Server-side "twin" of contract state, fed by event polling. No live RPC fallback at post time |
 | Who may post | Twin status `active` only. Blocked as soon as `WithdrawalInitiated` is seen |
+| Scope | Every board requires a deposit (no per-board toggle). Captchas and block bypasses are unhooked; reports and account registration are signed by an active deposit wallet instead |
 | Confiscation | Moderator's browser wallet (must equal `owner()`) calls `confiscate()` via MetaMask; server verifies the receipt |
 | After confiscation | No extra ban. A fresh deposit restores posting |
 | Permissions | Reuse existing: see addresses = `VIEW_RAW_IP`; Deposits page + confiscate = `MANAGE_GLOBAL_BANS` |
@@ -112,7 +113,7 @@ Settings (global, via migration + `configs/template.js.example` + global setting
 `deposit.deployBlock`, `deposit.confirmations` (default 1), `deposit.pollInterval` (ms, default 5000),
 `deposit.interfaceUrl` (link to the DamageDeposit UI with `?contract=`),
 `deposit.assetSymbol`/`deposit.assetDecimals` (display only; read `depositRequirement` from chain).
-Board setting: `requireDeposit` (bool, default false) in `models/forms/changeboardsettings.js` + `views/pages/managesettings.pug`.
+~~Board setting: `requireDeposit`~~ (removed: every board requires a deposit).
 
 Collections (`db/deposits.js`, export from `db/index.js`):
 - `deposits`: `{ _id: <lowercase address>, status: 'active'|'withdrawing', withdrawAt: Date|null, depositBlock, lastEventBlock, updatedAt }`. Exited/confiscated keys are deleted after their posts are stripped. Index `{ status: 1, withdrawAt: 1 }`.
@@ -146,7 +147,7 @@ Collections (`db/deposits.js`, export from `db/index.js`):
    ```
    Client computes file hashes with `crypto.subtle.digest`. Server uses `req.files.file[i].sha256`.
 2. Client (`gulp/res/js/forms.js`): on deposit-required boards, intercept submit: request accounts, fetch `/nonce/<address>.json`, build the message, `personal_sign`, fill hidden `signature`, `address`, `nonce` fields, then submit. Replace the manual "Sign" button on those boards. Show errors inline.
-3. Server (`controllers/forms/makepost.js`), when `deposit.enabled` and board `requireDeposit` (no bypass permission in v1; staff posting via `/modpost` is exempt):
+3. Server (`controllers/forms/makepost.js`), on every board (no bypass permission in v1; staff posting via `/modpost` is exempt; posting is refused while `deposit.enabled` is off):
    - Consume the nonce (`cache.del('nonce:<address>:<nonce>') === 1`), else error.
    - Recover the address from the rebuilt message; must equal the submitted address (case-insensitive).
    - Twin lookup: missing -> "No deposit found for this wallet (deposits can take a few blocks to be recognised)"; `withdrawing` -> "This wallet's deposit is being withdrawn; posting is disabled"; `active` -> ok.
