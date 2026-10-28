@@ -1491,6 +1491,7 @@
 	"Could not confiscate the deposit.": "Could not confiscate the deposit.",
 	"Could not verify the confiscation transaction.": "Could not verify the confiscation transaction.",
 	"Deposit already confiscated.": "Deposit already confiscated.",
+	"Reason (shown in the public modlog):": "Reason (shown in the public modlog):",
 	"Global post history for key %s": "Global post history for key %s",
 	"Post history for key %s": "Post history for key %s",
 	"See Global Posts by this Key": "See Global Posts by this Key"

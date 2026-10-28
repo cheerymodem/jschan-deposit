@@ -64,7 +64,10 @@
 		}
 		const amount = await getAmount();
 		const amountText = amount != null ? ` (${amount})` : '';
-		if (!window.confirm(__('Confiscate the deposit for key %s%s? This removes their posts and writes a public log.', short(address), amountText))) {
+		//the reason goes into the public modlog; cancel aborts before any tx is sent
+		const reason = window.prompt(__('Confiscate the deposit for key %s%s? This removes their posts and writes a public log.', short(address), amountText)
+			+ '\n' + __('Reason (shown in the public modlog):'), '');
+		if (reason == null) {
 			return null; //cancelled; caller stops without sending anything
 		}
 		//confiscate(address): selector 0x44f252a0 + 32-byte padded address
@@ -81,7 +84,7 @@
 		if (!receipt || receipt.status !== '0x1') {
 			throw new Error(__('Confiscation transaction failed.'));
 		}
-		return txHash;
+		return { txHash, reason: reason.trim() };
 	}
 
 	function waitForReceipt(txHash) {
@@ -109,11 +112,12 @@
 			return;
 		}
 		try {
-			const txHash = await confirmAndSend(address);
+			const sent = await confirmAndSend(address);
 			//user cancelled the confirm; do not proceed
-			if (txHash == null) {
+			if (sent == null) {
 				return;
 			}
+			const { txHash, reason } = sent;
 			const res = await fetch('/forms/global/confiscate', {
 				method: 'POST',
 				headers: {
@@ -123,7 +127,7 @@
 				body: new URLSearchParams({
 					address,
 					txHash,
-					reason: '',
+					reason,
 					_csrf: csrf,
 				}),
 			});

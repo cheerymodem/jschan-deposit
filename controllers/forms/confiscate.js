@@ -60,7 +60,10 @@ module.exports = {
 
 		const address = (typeof req.body.address === 'string') ? req.body.address.toLowerCase() : null;
 		const txHash = (typeof req.body.txHash === 'string') ? req.body.txHash.toLowerCase() : null;
-		const reason = (typeof req.body.reason === 'string') ? req.body.reason : null;
+		const { globalLimits } = config.get;
+		const reason = (typeof req.body.reason === 'string' && req.body.reason.trim().length > 0)
+			? req.body.reason.trim().substring(0, globalLimits.fieldLength.log_message)
+			: null;
 
 		if (!deposit || deposit.enabled !== true || !txHash || !address
 			|| !/^0x[a-f0-9]{40}$/.test(address) || !/^0x[a-f0-9]{64}$/.test(txHash)) {
@@ -83,6 +86,10 @@ module.exports = {
 		//bogus or not-yet-mined hash cannot block the real confirmation. The
 		//listener may already have processed it from the chain event.
 		if (!(await DepositSync.claimTx(txHash))) {
+			//the listener wrote the modlog without a staff reason; add it now
+			if (reason) {
+				await tombstone.addConfiscationReason(txHash, reason);
+			}
 			await Deposits.delete(address);
 			return dynamicResponse(req, res, 200, 'message', {
 				'title': __('Success'),
