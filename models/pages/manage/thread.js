@@ -1,6 +1,8 @@
 'use strict';
 
-const Posts = require(__dirname+'/../../../db/posts.js');
+const Posts = require(__dirname+'/../../../db/posts.js')
+	, { Permissions } = require(__dirname+'/../../../lib/permission/permissions.js')
+	, omitAddress = require(__dirname+'/../../../lib/deposit/omitaddress.js');
 
 module.exports = async (req, res, next) => {
 
@@ -9,6 +11,10 @@ module.exports = async (req, res, next) => {
 		thread = await Posts.getThread(res.locals.board._id, res.locals.thread.postId, true);
 		if (!thread) {
 			return next(); //deleted between exists
+		}
+		//wallet addresses are only for staff who can see raw IPs
+		if (!res.locals.permissions.get(Permissions.VIEW_RAW_IP)) {
+			thread = { ...omitAddress(thread), replies: (thread.replies || []).map(omitAddress) };
 		}
 	} catch (err) {
 		return next(err);

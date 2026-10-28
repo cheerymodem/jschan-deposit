@@ -90,7 +90,9 @@ module.exports = async (req, res) => {
 		'forceThreadSubject': booleanSetting(req.body.force_thread_subject),
 		'disableReplySubject': booleanSetting(req.body.disable_reply_subject),
 		'hideBanners': booleanSetting(req.body.hide_banners),
-		'captchaMode': (booleanSetting(req.body.require_deposit) ? 0 : numberSetting(req.body.captcha_mode, oldSettings.captchaMode)),
+		//deposit boards replace the captcha, but only while the deposit system is enabled
+		'captchaMode': ((booleanSetting(req.body.require_deposit) && config.get.deposit && config.get.deposit.enabled === true)
+			? 0 : numberSetting(req.body.captcha_mode, oldSettings.captchaMode)),
 		'tphTrigger': numberSetting(req.body.tph_trigger, oldSettings.tphTrigger),
 		'tphTriggerAction': numberSetting(req.body.tph_trigger_action, oldSettings.tphTriggerAction),
 		'pphTrigger': numberSetting(req.body.pph_trigger, oldSettings.pphTrigger),

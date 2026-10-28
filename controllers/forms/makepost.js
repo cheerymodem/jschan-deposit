@@ -9,6 +9,7 @@ const makePost = require(__dirname+'/../../models/forms/makepost.js')
 	, { Files, Deposits } = require(__dirname+'/../../db/')
 	, cache = require(__dirname+'/../../lib/redis/redis.js')
 	, message = require(__dirname+'/../../lib/deposit/message.js')
+	, { checkAddress: checkAddressBans } = require(__dirname+'/../../lib/middleware/permission/bancheck.js')
 	, paramConverter = require(__dirname+'/../../lib/middleware/input/paramconverter.js')
 	, { checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js')
 	, { recover: web3EthAccountsRecover } = require('web3-eth-accounts');
@@ -162,6 +163,12 @@ module.exports = {
 				'errors': errors,
 				'redirect': `/${req.params.board}${req.body.thread ? '/thread/' + req.body.thread + '.html' : ''}`
 			});
+		}
+
+		//address bans can only be checked here: banCheck runs before the multipart body is parsed
+		if (res.locals.depositAddress && await checkAddressBans(req, res, res.locals.depositAddress)) {
+			await deleteTempFiles(req).catch(console.error);
+			return;
 		}
 
 		try {

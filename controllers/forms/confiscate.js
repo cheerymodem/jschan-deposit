@@ -15,7 +15,8 @@ const verifyReceipt = async (txHash, address, contractAddress) => {
 	} catch (e) {
 		return null;
 	}
-	if (!receipt || receipt.status !== 1) {
+	//web3 v4 returns numeric receipt fields as BigInt
+	if (!receipt || BigInt(receipt.status) !== 1n) {
 		return null;
 	}
 	const contract = contractAddress.toLowerCase();
@@ -62,20 +63,10 @@ module.exports = {
 		const reason = (typeof req.body.reason === 'string') ? req.body.reason : null;
 
 		if (!deposit || deposit.enabled !== true || !txHash || !address
-			|| !/^0x[a-f0-9]{40}$/.test(address)) {
+			|| !/^0x[a-f0-9]{40}$/.test(address) || !/^0x[a-f0-9]{64}$/.test(txHash)) {
 			return dynamicResponse(req, res, 400, 'message', {
 				'title': __('Bad request'),
 				'message': __('Bad request'),
-			});
-		}
-
-		//idempotent on the tx hash
-		const alreadyProcessed = await DepositSync.hasProcessedTx('confiscate:' + txHash);
-		if (alreadyProcessed) {
-			return dynamicResponse(req, res, 200, 'message', {
-				'title': __('Success'),
-				'message': __('Deposit already confiscated.'),
-				'redirect': '/globalmanage/deposits.html',
 			});
 		}
 
@@ -85,6 +76,18 @@ module.exports = {
 			return dynamicResponse(req, res, 400, 'message', {
 				'title': __('Bad request'),
 				'message': __('Could not verify the confiscation transaction.'),
+			});
+		}
+
+		//idempotent on the tx hash, claimed only after the receipt verified so a
+		//bogus or not-yet-mined hash cannot block the real confirmation. The
+		//listener may already have processed it from the chain event.
+		if (!(await DepositSync.claimTx(txHash))) {
+			await Deposits.delete(address);
+			return dynamicResponse(req, res, 200, 'message', {
+				'title': __('Success'),
+				'message': __('Deposit already confiscated.'),
+				'redirect': '/globalmanage/deposits.html',
 			});
 		}
 

@@ -675,8 +675,9 @@ module.exports = async (req, res) => {
 		'signature': data.signature,
 		'address': data.address,
 	};
-	if (data.thread) {
+	if (data.thread && !data.hidden) {
 		//dont emit thread to this socket, because the room only exists when the thread is open
+		//hidden (deposit exiting) posts never go to the public room; the rebuild shows the tombstone
 		Socketio.emitRoom(`${res.locals.board._id}-${data.thread}`, 'newPost', omitAddress(projectedPost));
 	}
 	const { raw, cloak, type } = data.ip;

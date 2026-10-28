@@ -1,4 +1,5 @@
-/* globals __ __n modal Tegaki grecaptcha hcaptcha captchaController appendLocalStorageArray socket isThread setLocalStorage forceUpdate captchaController uploaditem isCanvasBlocked TegakiWrapper */async function videoThumbnail(file) {
+/* globals __ __n modal Tegaki grecaptcha hcaptcha captchaController appendLocalStorageArray socket isThread setLocalStorage forceUpdate captchaController uploaditem isCanvasBlocked TegakiWrapper */
+async function videoThumbnail(file) {
 	return new Promise((resolve, reject) => {
 		const hiddenVideo = document.createElement('video');
 		hiddenVideo.setAttribute('src', URL.createObjectURL(file));
@@ -432,9 +433,13 @@ class postFormHandler {
 	formSubmit(e) {
 
 		//deposit boards: ask the wallet to sign first, then submit with hidden fields
-		if (this.depositRequired && !this.depositSigned) {
-			e.preventDefault();
-			return this.doDepositSign(e);
+		//each signature consumes a single-use nonce, so clear the flag once used
+		if (this.depositRequired) {
+			if (!this.depositSigned) {
+				e.preventDefault();
+				return this.doDepositSign(e);
+			}
+			this.depositSigned = false;
 		}
 
 		//deposit-report boards: only require a report signature when a report
@@ -449,9 +454,12 @@ class postFormHandler {
 		} else {
 			this.depositReportRequired = false;
 		}
-		if (this.depositReportRequired && !this.depositReportSigned) {
-			e.preventDefault();
-			return this.doDepositReportSign(e);
+		if (this.depositReportRequired) {
+			if (!this.depositReportSigned) {
+				e.preventDefault();
+				return this.doDepositReportSign(e);
+			}
+			this.depositReportSigned = false;
 		}
 
 		//get the captcha response if any recaptcha

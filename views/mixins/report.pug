@@ -9,4 +9,4 @@ mixin report(r, manage=false)
 		time.reltime(datetime=reportDate.toISOString()) #{reportDate.toLocaleString(pageLanguage, { hourCycle:'h23' })}
 		|  | #{__('Reason')}: #{r.reason}
 		if r.address
-			|  | #[a.bold(href=`?deposit=${r.address}`) #{r.address}]
+			|  | #[a.bold(href=`recent.html?address=${encodeURIComponent(r.address)}`) #{r.address}]

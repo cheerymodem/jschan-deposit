@@ -20,6 +20,10 @@ module.exports = async(db, redis) => {
 	console.log('Clearing globalsettings cache');
 	await redis.deletePattern('globalsettings');
 
-	console.log('Indexing wallet addresses for bans and warnings');
-	await db.collection('bans').createIndex({ 'address': 1, 'board': 1 });
-});
+	console.log('Indexing wallet addresses for posts, bans and warnings');
+	await db.collection('posts').createIndex({ 'address': 1 }, { 'sparse': true });
+	await db.collection('deposits').createIndex({ 'status': 1, 'withdrawAt': 1 });
+	await db.collection('bans').createIndex({ 'address': 1, 'board': 1 }, { 'sparse': true });
+	await db.collection('warnings').createIndex({ 'address': 1, 'board': 1 });
+	await db.collection('warnings').createIndex({ 'expireAt': 1 }, { expireAfterSeconds: 0 });
+};

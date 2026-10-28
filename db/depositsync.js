@@ -21,16 +21,15 @@ module.exports = {
 		return db.updateOne({ '_id': 'sync' }, update, { 'upsert': true });
 	},
 
-	//tombstone a processed confiscation tx hash so the confirm endpoint and
-	//listener are both idempotent on it
-	hasProcessedTx: async (txHash) => {
+	//claim a confiscation tx hash so the confirm endpoint and the listener
+	//process it once between them. Returns true if this caller won the claim.
+	claimTx: async (txHash) => {
 		const result = await db.updateOne({
 			'_id': 'processedtx',
-			'hashes': { '$ne': txHash },
 		}, {
-			'$push': { 'hashes': txHash },
-		});
-		return result.modifiedCount === 0;
+			'$addToSet': { 'hashes': txHash.toLowerCase() },
+		}, { 'upsert': true });
+		return result.modifiedCount === 1 || result.upsertedCount === 1;
 	},
 
 };

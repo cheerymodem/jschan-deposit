@@ -77,9 +77,9 @@ module.exports = {
 			projection['ip.raw'] = 0;
 			//MongoError, why cant i just projection['reports.ip.raw'] = 0;
 			if (board) {
-				projection['reports'] = { ip: { raw: 0 } };
+				projection['reports'] = { ip: { raw: 0 }, address: 0 };
 			} else {
-				projection['globalreports'] = { ip: { raw: 0 } };
+				projection['globalreports'] = { ip: { raw: 0 }, address: 0 };
 			}
 			projection['signature'] = 0;
 			projection['address'] = 0;
@@ -569,7 +569,7 @@ module.exports = {
 		};
 		if (!permissions.get(Permissions.VIEW_RAW_IP)) {
 			projection['ip.raw'] = 0;
-			projection['reports'] = { ip: { raw: 0 } };
+			projection['reports'] = { ip: { raw: 0 }, address: 0 };
 			projection['signature'] = 0;
 			projection['address'] = 0;
 		}
@@ -590,7 +590,7 @@ module.exports = {
 		};
 		if (!permissions.get(Permissions.VIEW_RAW_IP)) {
 			projection['ip.raw'] = 0;
-			projection['globalreports'] = { ip: { raw: 0 } };
+			projection['globalreports'] = { ip: { raw: 0 }, address: 0 };
 			projection['signature'] = 0;
 			projection['address'] = 0;
 		}

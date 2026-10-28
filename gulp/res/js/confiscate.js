@@ -1,4 +1,4 @@
-/* globals __ __n doModal */
+/* globals __ doModal */
 //Confiscate a deposit from the owner's wallet. Used on the Deposits page and,
 //optionally, staff post views. Requires MetaMask/ethereum injected provider.
 (function () {
@@ -52,7 +52,8 @@
 		if (!result || result === '0x') {
 			return null;
 		}
-		return parseInt(result, 16);
+		//uint256 wei amounts exceed Number precision
+		return BigInt(result).toString();
 	}
 
 	async function confirmAndSend(address) {
@@ -117,6 +118,7 @@
 				method: 'POST',
 				headers: {
 					'content-type': 'application/x-www-form-urlencoded',
+					'x-using-xhr': 'true',
 				},
 				body: new URLSearchParams({
 					address,
@@ -126,7 +128,7 @@
 				}),
 			});
 			const json = await res.json().catch(() => null);
-			doModal(json || { title: 'Confiscate', message: __('Deposit confiscated.') });
+			doModal(json || { title: __('Confiscate'), message: __('Could not confirm the confiscation with the server. The transaction succeeded; the posts will be removed when the chain listener sees it.') });
 			if (json && res.status === 200) {
 				//refresh so tombstones and modlog reflect the change
 				setTimeout(() => window.location.reload(), 1500);

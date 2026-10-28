@@ -15,10 +15,12 @@ module.exports = {
 		return db.findOne(query, options);
 	},
 
-	upsertActive: (address, blockNumber, lastEventBlock) => {
+	upsertActive: async (address, blockNumber, lastEventBlock) => {
 		//only activate when the key is not already withdrawing in our store. The
 		//grant cursor lags by confirmations and can otherwise re-apply a deposit
 		//after a restrictive event set the twin to withdrawing, resurrecting it.
+		//A withdrawing doc fails the filter, so the upsert tries to insert a
+		//duplicate _id; that is the "leave it withdrawing" case, not an error.
 		return db.updateOne({
 			'_id': address.toLowerCase(),
 			'status': { '$ne': 'withdrawing' },
@@ -30,11 +32,12 @@ module.exports = {
 				'lastEventBlock': lastEventBlock,
 				'updatedAt': new Date(),
 			},
-			'$setOnInsert': {
-				'depositBlock': blockNumber,
-				'lastEventBlock': lastEventBlock,
-			},
-		}, { 'upsert': true });
+		}, { 'upsert': true }).catch(err => {
+			if (err.code !== 11000) {
+				throw err;
+			}
+			return null;
+		});
 	},
 
 	setWithdrawing: (address, withdrawAt, lastEventBlock) => {

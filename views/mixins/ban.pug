@@ -13,9 +13,10 @@ mixin ban(ban, banpage)
 			else
 				a(href=`/${ban.board}/`) /#{ban.board}/
 		td= ban.reason
-		- const ip = ban.address ? ban.address : (viewRawIp === true ? ban.ip.raw : ban.ip.cloak);
+		- const ip = viewRawIp === true ? ban.ip.raw : ban.ip.cloak;
 		if ban.address
-			td #{ban.address}
+			//- wallet addresses are staff-only behind VIEW_RAW_IP; a banned user sees their own
+			td #{(viewRawIp === true || banpage) ? ban.address : ban.ip.cloak}
 		else if viewRawIp === true
 			td #{ip}
 		else

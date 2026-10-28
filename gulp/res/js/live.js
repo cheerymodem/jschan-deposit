@@ -38,6 +38,7 @@ window.addEventListener('settingsReady', function() { //after domcontentloaded
 		let dataMark;
 		let applyToReplies = false;
 		let disableReplies = false;
+		let removeContent = false;
 		switch (data.type) {
 			case 'delete':
 				dataMark = __('Deleted');
@@ -50,18 +51,23 @@ window.addEventListener('settingsReady', function() { //after domcontentloaded
 				disableReplies = true;
 				break;
 			case 'hidden':
-				dataMark = __("Post hidden: author's deposit is exiting");
+				dataMark = __('Post hidden: author\'s deposit is exiting');
+				removeContent = !isModView; //staff keep seeing hidden posts in full
 				break;
 			case 'tombstone':
-				//re-fetch isn't ideal but hides any content the tombstone strips;
-				//redo the body with the compact placeholder is handled by server rebuild.
 				dataMark = __('Post removed');
+				removeContent = true;
 				break;
 			case 'banmessage':
 			case 'edit': //opting for no data mark, already has the usual "edited x ago"
 				break;
 			default:
 				return;
+		}
+		if (removeContent && postContainer) {
+			//drop content already on the page; the rebuilt page shows the tombstone
+			postContainer.querySelectorAll('.post-files, .post-message, .post-subject')
+				.forEach(e => e.remove());
 		}
 		if (dataMark) {
 			//mark with a red text

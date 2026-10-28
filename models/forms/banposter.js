@@ -2,7 +2,17 @@
 
 const { Bans } = require(__dirname+'/../../db/')
 	, Socketio = require(__dirname+'/../../lib/misc/socketio.js')
-	, config = require(__dirname+'/../../lib/misc/config.js');
+	, config = require(__dirname+'/../../lib/misc/config.js')
+	, hashIp = require(__dirname+'/../../lib/misc/haship.js')
+	, ipTypes = require(__dirname+'/../../lib/middleware/ip/iptypes.js');
+
+//address bans keep the wallet in `address`/`ip.raw`; the cloak shown to staff
+//without VIEW_RAW_IP is a keyed hash so it does not reveal the wallet
+const addressBanIp = (address) => ({
+	cloak: `${hashIp(address.toLowerCase()).substring(0,10)}.WALLET`,
+	raw: address.toLowerCase(),
+	type: ipTypes.DEPOSIT,
+});
 
 module.exports = async (req, res) => {
 
@@ -45,11 +55,7 @@ module.exports = async (req, res) => {
 			const thisPost = thisIpPosts[0];
 			let banRange = 0;
 			let banIp = addressBans && thisPost.address
-				? {
-					cloak: thisPost.address,
-					raw: thisPost.address,
-					type: 4, //deposit address
-				}
+				? addressBanIp(thisPost.address)
 				: {
 					cloak: thisPost.ip.cloak,
 					raw: thisPost.ip.raw,
@@ -117,7 +123,7 @@ module.exports = async (req, res) => {
 					'global': req.body.global_report_ban != null,
 					'range': 0,
 					'ip': reportAddressBans
-						? { cloak: target, raw: target, type: 4 }
+						? addressBanIp(target)
 						: target,
 					'address': reportAddressBans ? target : null,
 					'reason': banReason,
