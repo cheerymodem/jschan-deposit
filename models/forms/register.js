@@ -29,7 +29,21 @@ module.exports = async (req, res) => {
 		});
 	}
 
-	await Accounts.insertOne(original, username, password, roleManager.roles.ANON, res.locals.isWeb3);
+	try {
+		await Accounts.insertOne(original, username, password, roleManager.roles.ANON, res.locals.isWeb3, res.locals.walletKey);
+	} catch (e) {
+		//a concurrent registration took the username or the deposit wallet
+		if (e.code === 11000) {
+			return dynamicResponse(req, res, 409, 'message', {
+				'title': __('Conflict'),
+				'message': e.keyPattern && e.keyPattern.walletKey
+					? __('This wallet is already linked to an account')
+					: __('Account with that username already exists'),
+				'redirect': '/register.html'
+			});
+		}
+		throw e;
+	}
 
 	if (res.locals.isWeb3) {
 		req.session.user = username;

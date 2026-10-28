@@ -224,6 +224,7 @@ async function wipe() {
 	await Posts.db.createIndex({ 'globalreports.0': 1 }, { 'partialFilterExpression': {	'globalreports.0': { '$exists': true } } });
 	await Posts.db.createIndex({ 'address': 1 }, { 'sparse': true });
 	await db.collection('deposits').createIndex({ 'status': 1, 'withdrawAt': 1 });
+	await Accounts.db.createIndex({ 'walletKey': 1 }, { 'unique': true, 'partialFilterExpression': { 'walletKey': { '$type': 'string' } } });
 
 	const ANON = new Permission();
 	ANON.setAll([

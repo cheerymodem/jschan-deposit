@@ -36,7 +36,7 @@ module.exports = {
 		return account;
 	},
 
-	insertOne: async (original, username, password, permissions, web3=false) => {
+	insertOne: async (original, username, password, permissions, web3=false, walletKey=null) => {
 		// hash the password
 		let passwordHash;
 		if (password) {
@@ -52,9 +52,15 @@ module.exports = {
 			'staffBoards': [],
 			'twofactor': null,
 			web3,
+			...(walletKey ? { walletKey } : {}),
 		});
 		cache.del(`users:${username}`);
 		return res;
+	},
+
+	//whether an account was already registered with this deposit wallet
+	walletKeyExists: async (walletKey) => {
+		return (await db.countDocuments({ walletKey }, { 'limit': 1 })) > 0;
 	},
 
 	changePassword: async (username, newPassword) => {
@@ -131,7 +137,8 @@ module.exports = {
 	find: (filter, skip=0, limit=0) => {
 		return db.find(filter, {
 			'projection': {
-				'passwordHash': 0
+				'passwordHash': 0,
+				'walletKey': 0,
 			}
 		}).skip(skip).limit(limit).toArray();
 	},

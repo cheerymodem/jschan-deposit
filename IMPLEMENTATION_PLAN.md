@@ -18,7 +18,7 @@ from the refundable deposit instead of identity.
 | Signing | Every post is signed (no posting sessions) |
 | Deposit check | Server-side "twin" of contract state, fed by event polling. No live RPC fallback at post time |
 | Who may post | Twin status `active` only. Blocked as soon as `WithdrawalInitiated` is seen |
-| Scope | Every board requires a deposit (no per-board toggle). Captchas and block bypasses are unhooked; reports and account registration are signed by an active deposit wallet instead |
+| Scope | Every board requires a deposit (no per-board toggle). Captchas and block bypasses are unhooked; reports and account registration are signed by an active deposit wallet instead. One account per wallet, enforced by a keyed hash of the address (`accounts.walletKey`, HMAC with `ipHashSecret`), never the address itself |
 | Confiscation | Moderator's browser wallet (must equal `owner()`) calls `confiscate()` via MetaMask; server verifies the receipt |
 | After confiscation | No extra ban. A fresh deposit restores posting |
 | Permissions | Reuse existing: see addresses = `VIEW_RAW_IP`; Deposits page + confiscate = `MANAGE_GLOBAL_BANS` |

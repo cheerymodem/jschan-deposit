@@ -17,7 +17,7 @@
 		.row.jsonly
 			.label #{__('Deposit')}
 			span.col
-				span #{__('Registering signs a message with a wallet that holds an active deposit.')}
+				span #{__('Registering signs a message with a wallet that holds an active deposit. Each wallet can register one account.')}
 				if deposit && deposit.interfaceUrl
 					- const depositLink = deposit.contractAddress ? `${deposit.interfaceUrl}${deposit.interfaceUrl.includes('?') ? '&' : '?'}contract=${encodeURIComponent(deposit.contractAddress)}` : deposit.interfaceUrl;
 					a.ml-1(href=depositLink rel='nofollow' referrerpolicy='same-origin' target='_blank') #{__('Deposit here')}

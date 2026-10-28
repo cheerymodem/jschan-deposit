@@ -10,13 +10,15 @@ const { Permissions } = require(__dirname+'/../../lib/permission/permissions.js'
 	, cache = require(__dirname+'/../../lib/redis/redis.js')
 	, { recover: web3EthAccountsRecover } = require('web3-eth-accounts')
 	, { isAddress: web3UtilsIsAddress } = require('web3-utils')
-	, { Deposits } = require(__dirname+'/../../db/')
+	, { Accounts, Deposits } = require(__dirname+'/../../db/')
+	, walletKey = require(__dirname+'/../../lib/deposit/walletkey.js')
 	, registerMessage = require(__dirname+'/../../lib/deposit/register.js');
 
 //registering needs a wallet with an active deposit (it replaces the captcha, and
 //accounts can create boards). Password registrations sign a username-bound
-//message; web3 registrations already proved control of their address. Returns an
-//error message, or null if the wallet holds an active deposit.
+//message; web3 registrations already proved control of their address. Each wallet
+//registers one account, tracked by a keyed hash (res.locals.walletKey) rather than
+//the address. Returns an error message, or null if the wallet may register.
 const checkRegisterDeposit = async (req, res) => {
 	const { __ } = res.locals;
 	if (config.get.deposit.enabled !== true) {
@@ -48,6 +50,10 @@ const checkRegisterDeposit = async (req, res) => {
 	const twin = await Deposits.findOne({ _id: address });
 	if (!twin || twin.status !== 'active') {
 		return __('No active deposit found for this wallet');
+	}
+	res.locals.walletKey = walletKey(address);
+	if (await Accounts.walletKeyExists(res.locals.walletKey)) {
+		return __('This wallet is already linked to an account');
 	}
 	return null;
 };
