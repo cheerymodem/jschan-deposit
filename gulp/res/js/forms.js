@@ -1,4 +1,4 @@
-/* globals __ __n modal Tegaki grecaptcha hcaptcha captchaController appendLocalStorageArray socket isThread setLocalStorage forceUpdate captchaController uploaditem isCanvasBlocked TegakiWrapper */
+/* globals __ __n modal Tegaki grecaptcha hcaptcha captchaController appendLocalStorageArray socket isThread setLocalStorage forceUpdate captchaController uploaditem isCanvasBlocked TegakiWrapper sha256Bytes */
 async function videoThumbnail(file) {
 	return new Promise((resolve, reject) => {
 		const hiddenVideo = document.createElement('video');
@@ -324,10 +324,7 @@ class postFormHandler {
 			this.formSubmit(e);
 		} catch (err) {
 			console.warn(err);
-			doModal({
-				'title': __('Deposit'),
-				'message': __('Failed to sign with your wallet.'),
-			});
+			this.depositSignError(err);
 		}
 	}
 
@@ -374,10 +371,7 @@ class postFormHandler {
 			this.formSubmit(e);
 		} catch (err) {
 			console.warn(err);
-			doModal({
-				'title': __('Deposit'),
-				'message': __('Failed to sign with your wallet.'),
-			});
+			this.depositSignError(err);
 		}
 	}
 
@@ -416,29 +410,26 @@ class postFormHandler {
 			this.formSubmit(e);
 		} catch (err) {
 			console.warn(err);
-			doModal({
-				'title': __('Deposit'),
-				'message': __('Failed to sign with your wallet.'),
-			});
+			this.depositSignError(err);
 		}
 	}
 
-	async sha256Hex(input) {
-		const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
-		let hex = '';
-		for (const byte of new Uint8Array(digest)) {
-			hex += byte.toString(16).padStart(2, '0');
-		}
-		return hex;
+	//show why signing failed: a wallet rejection, or the error that stopped it
+	depositSignError(err) {
+		const cancelled = err && err.code === 4001;
+		doModal({
+			'title': __('Deposit'),
+			'message': cancelled ? __('Signing was cancelled in your wallet.') : __('Failed to sign with your wallet.'),
+			...(!cancelled && err && err.message ? { 'error': err.message } : {}),
+		});
 	}
 
-	async sha256HexBytes(buffer) {
-		const digest = await window.crypto.subtle.digest('SHA-256', buffer);
-		let hex = '';
-		for (const byte of new Uint8Array(digest)) {
-			hex += byte.toString(16).padStart(2, '0');
-		}
-		return hex;
+	sha256Hex(input) {
+		return sha256Bytes(new TextEncoder().encode(input));
+	}
+
+	sha256HexBytes(buffer) {
+		return sha256Bytes(buffer);
 	}
 
 	async buildDepositMessage(address, nonce) {

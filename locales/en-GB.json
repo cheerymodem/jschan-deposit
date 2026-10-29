@@ -1450,6 +1450,7 @@
 	"Ethereum Links URL": "Ethereum Links URL",
 	"A web3 wallet is required to post on this board.": "A web3 wallet is required to post on this board.",
 	"Failed to sign with your wallet.": "Failed to sign with your wallet.",
+	"Signing was cancelled in your wallet.": "Signing was cancelled in your wallet.",
 	"This board requires a deposit. Posting signs a message with your wallet and is verified against the deposit contract.": "This board requires a deposit. Posting signs a message with your wallet and is verified against the deposit contract.",
 	"Posting on this board requires JavaScript and a web3 wallet.": "Posting on this board requires JavaScript and a web3 wallet.",
 	"Deposit here": "Deposit here",

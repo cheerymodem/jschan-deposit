@@ -604,6 +604,7 @@ const extraLocals = ${JSON.stringify({ meta: config.get.meta, reverseImageLinksU
 		`${paths.scripts.src}/iscanvasblocked.js`,
 		`${paths.scripts.src}/tegaki.js`,
 		`${paths.scripts.src}/tegakiwindow.js`,
+		`${paths.scripts.src}/sha256.js`,
 		`${paths.scripts.src}/forms.js`,
 		`${paths.scripts.src}/*.js`,
 		`!${paths.scripts.src}/saveoverboard.js`,
