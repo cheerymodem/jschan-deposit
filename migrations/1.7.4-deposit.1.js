@@ -25,4 +25,10 @@ module.exports = async(db, redis) => {
 	await db.collection('bans').createIndex({ 'address': 1, 'board': 1 }, { 'sparse': true });
 	await db.collection('warnings').createIndex({ 'address': 1, 'board': 1 });
 	await db.collection('warnings').createIndex({ 'expireAt': 1 }, { expireAfterSeconds: 0 });
+
+	console.log('Indexing account wallet keys (one account per deposit wallet)');
+	await db.collection('accounts').createIndex({ 'walletKey': 1 }, {
+		'unique': true,
+		'partialFilterExpression': { 'walletKey': { '$type': 'string' } },
+	});
 };
