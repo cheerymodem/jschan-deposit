@@ -121,7 +121,8 @@ MetaMask pointed at `http://localhost:8545` chain 31337 with the Hardhat test ac
    stripped to "Post removed: deposit withdrawn" tombstones; the key leaves the twin.
 5. **Re-deposit, post, confiscate**: deposit again from account #1 and post. Then, logged in with
    the owner account #0 on the Deposits page, click Confiscate for that key and approve in
-   MetaMask. The posts become "Post removed: deposit confiscated" tombstones that link to the day's
+   MetaMask. Staff views of a signed post (mod view, recent, reports) also have a "Confiscate
+   deposit" button for staff with both `MANAGE_GLOBAL_BANS` and `VIEW_RAW_IP`. The posts become "Post removed: deposit confiscated" tombstones that link to the day's
    modlog; the modlog row shows the tx hash and amount.
 6. **Author and moderator delete**: author deletes via the post password and a moderator deletes;
    both leave tombstones ("Post removed by author" / "Post removed by moderator") instead of hard

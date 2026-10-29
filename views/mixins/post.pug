@@ -208,6 +208,9 @@ mixin post(post, truncate, manage=false, globalmanage=false, ban=false, overboar
 					p #{__('No message or files.')}
 				if (modview || manage || globalmanage) && post.signature && post.address
 					+web3signature(post.signature, post.address)
+					//- staff only get the address with VIEW_RAW_IP; confiscate.js unhides this
+					//- for global staff (also on posts rendered client-side by live updates)
+					button.confiscate-button.dummy-link.ml-5(type='button' data-address=post.address hidden) #{__('Confiscate deposit')}
 				if post.edited
 					- const postEditDate = new Date(post.edited.date);
 					small.cb.mv-5.ml-5.edited

@@ -1,11 +1,12 @@
 /* globals __ doModal */
-//Confiscate a deposit from the owner's wallet. Used on the Deposits page and,
-//optionally, staff post views. Requires MetaMask/ethereum injected provider.
+//Confiscate a deposit from the owner's wallet. Used on the Deposits page and on
+//signed posts in staff views. Requires MetaMask/ethereum injected provider.
 (function () {
 	'use strict';
 
 	let depositChainId = null;
 	let depositContractAddress = null;
+	let canConfiscate = false;
 	let owner = null;
 
 	const short = (s) => s ? `${s.substring(0, 6)}…${s.substring(s.length - 4)}` : '';
@@ -107,7 +108,9 @@
 
 	async function confiscate(button) {
 		const address = button.dataset.address;
-		const csrf = button.dataset.csrf;
+		//post buttons have no csrf of their own; staff views carry it on the action form
+		const csrfInput = document.querySelector('input[name="_csrf"]');
+		const csrf = button.dataset.csrf || (csrfInput && csrfInput.value);
 		if (!address || !csrf) {
 			return;
 		}
@@ -146,22 +149,41 @@
 		}
 	}
 
+	const revealButtons = (root) => {
+		if (!canConfiscate) {
+			return;
+		}
+		for (const btn of root.querySelectorAll('.confiscate-button[hidden]')) {
+			btn.hidden = false;
+		}
+	};
+
 	window.addEventListener('settingsReady', () => {
-		const buttons = document.querySelectorAll('.confiscate-button');
-		if (buttons.length > 0) {
-			const meta = document.querySelector('meta[name="deposit-config"]');
-			if (meta) {
-				try {
-					const cfg = JSON.parse(meta.content);
-					depositChainId = cfg.chainId;
-					depositContractAddress = cfg.contractAddress;
-				} catch (e) {
-					//leave unset
-				}
+		const meta = document.querySelector('meta[name="deposit-config"]');
+		if (meta) {
+			try {
+				const cfg = JSON.parse(meta.content);
+				depositChainId = cfg.chainId;
+				depositContractAddress = cfg.contractAddress;
+				canConfiscate = cfg.canConfiscate === true;
+			} catch (e) {
+				//leave unset
 			}
-			for (const btn of buttons) {
-				btn.addEventListener('click', () => confiscate(btn));
+		}
+		revealButtons(document);
+		//delegated so posts added by live updates work too
+		document.addEventListener('click', (e) => {
+			const btn = e.target.closest && e.target.closest('.confiscate-button');
+			if (btn) {
+				e.preventDefault();
+				confiscate(btn);
 			}
+		});
+	});
+
+	window.addEventListener('addPost', (e) => {
+		if (e.detail && e.detail.post) {
+			revealButtons(e.detail.post);
 		}
 	});
 

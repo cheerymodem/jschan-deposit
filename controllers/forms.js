@@ -119,7 +119,7 @@ router.post('/global/deletefilter', useSession, sessionRefresh, csrf, calcPerms,
 router.post('/global/settings', geoIp, processIp, useSession, sessionRefresh, csrf, calcPerms, isLoggedIn,
 	hasPerms.one(Permissions.MANAGE_GLOBAL_SETTINGS), globalSettingsController.paramConverter, globalSettingsController.controller); //global settings
 router.post('/global/confiscate', useSession, sessionRefresh, csrf, calcPerms, isLoggedIn,
-	hasPerms.one(Permissions.MANAGE_GLOBAL_BANS), confiscateController.controller); //deposit confiscation confirm
+	hasPerms.all(Permissions.MANAGE_GLOBAL_BANS, Permissions.VIEW_RAW_IP), confiscateController.controller); //deposit confiscation confirm
 router.post('/global/clear', useSession, sessionRefresh, csrf, calcPerms, isLoggedIn,
 	hasPerms.one(Permissions.MANAGE_GLOBAL_SETTINGS), globalClearController.paramConverter, globalClearController.controller); //global clear
 

@@ -2,7 +2,8 @@
 
 const { Deposits, DepositSync, Posts } = require(__dirname+'/../../../db/')
 	, { Permissions } = require(__dirname+'/../../../lib/permission/permissions.js')
-	, config = require(__dirname+'/../../../lib/misc/config.js');
+	, config = require(__dirname+'/../../../lib/misc/config.js')
+	, keyTag = require(__dirname+'/../../../lib/deposit/keytag.js');
 
 //aggregate post counts per address
 const postAggregates = async () => {
@@ -47,14 +48,15 @@ module.exports = async (req, res, next) => {
 		return next(err);
 	}
 
-	const mask = (address) => showAddress ? address : address.substring(0, 8);
-
+	//the twin _id is the wallet address, so rows are built field by field and only
+	//carry it (as address) for staff with VIEW_RAW_IP
 	const exiting = allKeys.filter(k => k.status === 'withdrawing');
 	const withStats = (k) => ({
-		...k,
-		id: mask(k._id),
+		id: showAddress ? k._id : keyTag(k._id),
+		address: showAddress ? k._id : null,
+		status: k.status,
+		withdrawAt: k.withdrawAt,
 		stats: agg[k._id] || { posts: 0, hidden: 0, lastPost: null },
-		address: k._id,
 	});
 
 	const data = {

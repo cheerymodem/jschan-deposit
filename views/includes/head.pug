@@ -45,7 +45,9 @@ script(src=`/js/all.js?v=${commit}&ct=${captchaOptions.type}`)
 if enableWeb3 || isBoard && board.settings.enableWeb3
 	script(src=`/js/web3.js?v=${commit}`)
 
-//- deposit confiscation config, read by confiscate.js in all.js
+//- deposit confiscation config, read by confiscate.js in all.js. canConfiscate
+//- reveals the per-post buttons; confiscating needs the address (VIEW_RAW_IP)
 if deposit && deposit.enabled
-	meta(name='deposit-config' content=JSON.stringify({ chainId: deposit.chainId, contractAddress: deposit.contractAddress }))
+	- const canConfiscate = typeof permissions !== 'undefined' && permissions != null && permissions.get(Permissions.MANAGE_GLOBAL_BANS) && permissions.get(Permissions.VIEW_RAW_IP);
+	meta(name='deposit-config' content=JSON.stringify({ chainId: deposit.chainId, contractAddress: deposit.contractAddress, canConfiscate: canConfiscate === true }))
 

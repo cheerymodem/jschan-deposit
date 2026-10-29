@@ -21,7 +21,7 @@ from the refundable deposit instead of identity.
 | Scope | Every board requires a deposit (no per-board toggle). Captchas and block bypasses are unhooked; reports and account registration are signed by an active deposit wallet instead. One account per wallet, enforced by a keyed hash of the address (`accounts.walletKey`, HMAC with `ipHashSecret`), never the address itself |
 | Confiscation | Moderator's browser wallet (must equal `owner()`) calls `confiscate()` via MetaMask; server verifies the receipt |
 | After confiscation | No extra ban. A fresh deposit restores posting |
-| Permissions | Reuse existing: see addresses = `VIEW_RAW_IP`; Deposits page + confiscate = `MANAGE_GLOBAL_BANS` |
+| Permissions | Reuse existing: see addresses = `VIEW_RAW_IP`; Deposits page = `MANAGE_GLOBAL_BANS`; confiscate = both, since the transaction needs the address. Without `VIEW_RAW_IP` the Deposits page shows keyed tags, not address prefixes |
 | Withdrawal started | Author's posts are hidden from the public immediately, still fully visible to staff |
 | Deposit exited | Author's posts are stripped to tombstones immediately (no batching/jitter in v1) |
 | Tombstones | Every removal (exit, confiscation, mod delete, author delete) leaves a tombstone with a reason |
