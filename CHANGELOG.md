@@ -1,3 +1,8 @@
+### 1.7.4-deposit.1 (jschan-deposit fork, 2026-10-30)
+  - Modified version of jschan 1.7.3 (https://gitgud.io/fatchan/jschan), not an upstream release.
+  - Adds the DamageDeposit integration: every post, post action and registration is signed by a wallet with an active deposit, and moderators can confiscate deposits.
+  - Removes the captchas, block bypasses, post passwords and upstream web3 post signing, which the deposit replaces. See README.md for details.
+
 ### 1.7.3
   - Add "Auto Bumplock Time" board option to (if enabled) automatically bumplock old threads after a specified amount of time.
   - Add "Hover expands media" option in frontend and global settings frontend script defaults.

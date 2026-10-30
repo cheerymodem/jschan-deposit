@@ -5,10 +5,10 @@ Proof of concept fork of [jschan](https://gitgud.io/fatchan/jschan) that require
 deposits for abuse. Anonymity toward the public is the top priority; abuse control comes
 from the refundable deposit instead of identity.
 
-- Repo: `this repository`, branch `deposit` (local only for now)
+- Repo: this repository, branch `deposit`
 - Upstream remote: `upstream` = gitgud.io/fatchan/jschan (`master` = upstream 1.7.3, commit `c0d50eb1`)
-- Contract repo: `../DamageDeposit` (Hardhat; see its `CLAUDE.md`)
-- Target chain for this PoC: local Hardhat node only
+- Contract repo: DamageDeposit, checked out alongside as `../DamageDeposit` (Hardhat)
+- Target chains: a local Hardhat node for development, a public testnet for demos (see `DEPLOY.md`)
 
 ## Decisions (settled, do not re-litigate)
 

@@ -1,10 +1,20 @@
 # jschan-deposit
 
-<!-- TODO: link DamageDeposit and this repo once they are published -->
+<!-- TODO: link the DamageDeposit repository once it is published -->
 A fork of the [jschan](https://gitgud.io/fatchan/jschan) imageboard that demonstrates
 **DamageDeposit**, an Ethereum smart contract, as its anti-spam system. Every post is backed by a
 refundable deposit held in the contract, which moderators can confiscate for abuse. It replaces
 captchas, post passwords and IP-based gatekeeping, while keeping posters anonymous to the public.
+
+## Fork of jschan
+
+This project is a modified version of **jschan** by Thomas Lynch (fatchan) and contributors:
+https://gitgud.io/fatchan/jschan. It is not affiliated with or endorsed by the jschan project.
+Everything that makes jschan an imageboard is their work; this fork adds the DamageDeposit
+integration and removes the parts it replaces. Like upstream it is licensed under the GNU AGPLv3
+(see [LICENSE](LICENSE)), and the `master` branch tracks upstream, so `git diff master deposit` shows
+exactly what the fork changes. Please report problems with the deposit integration here, not to
+upstream.
 
 ## Why
 
