@@ -7,6 +7,7 @@ const { Posts, Boards, Deposits } = require(__dirname+'/../../db/')
 	, dynamicResponse = require(__dirname+'/../../lib/misc/dynamic.js')
 	, actionChecker = require(__dirname+'/../../lib/input/actionchecker.js')
 	, paramConverter = require(__dirname+'/../../lib/middleware/input/paramconverter.js')
+	, { checkAddress } = require(__dirname+'/../../lib/middleware/permission/bancheck.js')
 	, { checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js');
 
 //validate a wallet-bound report proof: the submitted address must have an active
@@ -83,6 +84,11 @@ module.exports = {
 		res.locals.actions = actionChecker(req, res);
 
 		const reportDepositOk = await verifyReportDeposit(req, res);
+		//wallet bans apply once the signature proved control of the wallet
+		if (reportDepositOk && res.locals.reportDepositAddress
+			&& await checkAddress(req, res, res.locals.reportDepositAddress)) {
+			return;
+		}
 
 		const errors = await checkSchema([
 			{ result: lengthBody(req.body.checkedposts, 1), expected: false, blocking: true, error: __('Must select at least one post') },

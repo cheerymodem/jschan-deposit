@@ -3,16 +3,7 @@
 const { Bans } = require(__dirname+'/../../db/')
 	, Socketio = require(__dirname+'/../../lib/misc/socketio.js')
 	, config = require(__dirname+'/../../lib/misc/config.js')
-	, hashIp = require(__dirname+'/../../lib/misc/haship.js')
-	, ipTypes = require(__dirname+'/../../lib/middleware/ip/iptypes.js');
-
-//address bans keep the wallet in `address`/`ip.raw`; the cloak shown to staff
-//without VIEW_RAW_IP is a keyed hash so it does not reveal the wallet
-const addressBanIp = (address) => ({
-	cloak: `${hashIp(address.toLowerCase()).substring(0,10)}.WALLET`,
-	raw: address.toLowerCase(),
-	type: ipTypes.DEPOSIT,
-});
+	, addressBanIp = require(__dirname+'/../../lib/deposit/addressip.js');
 
 module.exports = async (req, res) => {
 
@@ -85,7 +76,8 @@ module.exports = async (req, res) => {
 				'issuer': req.session.user,
 				'date': banDate,
 				'expireAt': banExpiry,
-				allowAppeal,
+				//wallet bans are final, never appealable
+				'allowAppeal': banAddress ? false : allowAppeal,
 				'appeal': null,
 				'showUser': !req.body.hide_name,
 				'note': null,
@@ -127,7 +119,7 @@ module.exports = async (req, res) => {
 					'issuer': req.session.user,
 					'date': banDate,
 					'expireAt': banExpiry,
-					allowAppeal,
+					'allowAppeal': target.address ? false : allowAppeal,
 					'appeal': null,
 					'showUser': !req.body.hide_name,
 					'note': null,

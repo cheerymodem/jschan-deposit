@@ -3,7 +3,8 @@ include ./post.pug
 mixin ban(ban, banpage)
 	tr
 		td
-			if (!board || !ban.global) && (!banpage || (ban.appeal == null && ban.allowAppeal === true))
+			//- wallet bans are final: never offered for appeal
+			if (!board || !ban.global) && (!banpage || (ban.appeal == null && ban.allowAppeal === true && !ban.address))
 				input.post-check(type='checkbox', name='checkedbans' value=ban._id)
 		td
 			if ban.global === true
@@ -42,14 +43,14 @@ mixin ban(ban, banpage)
 			else 
 				| &#10799;
 		td
-			if ban.allowAppeal && !ban.appeal
+			if ban.allowAppeal && !ban.appeal && !ban.address
 				| &#10003;
 			else 
 				| &#10799;
 		td
 			if ban.appeal
 				textarea(rows=1 disabled='true') #{ban.appeal}
-			else if ban.allowAppeal
+			else if ban.allowAppeal && !ban.address
 				| #{__('No appeal submitted')}
 			else 
 				| -
