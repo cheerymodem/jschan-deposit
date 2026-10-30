@@ -417,6 +417,9 @@ module.exports = {
 		geoFlags: false, //show geo flags, requires nginx setup
 		customFlags: false, //show custom flags
 		enableTegaki: true,
+		//upstream web3 post signing; leave off, it clashes with the deposit signature
+		//(the board setting is not offered in the board settings page)
+		enableWeb3: false,
 		userPostDelete: true, //allow users to delete their posts
 		userPostSpoiler: true, //allow user to spoiler their post files
 		userPostUnlink: true, //alow user to unlink files fomr their post

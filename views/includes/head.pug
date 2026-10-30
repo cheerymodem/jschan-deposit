@@ -42,7 +42,7 @@ script(src=`/js/lang/${pageLanguage}.js?v=${commit}`)
 script(src=`/js/all.js?v=${commit}&ct=${captchaOptions.type}`)
 
 //- optional web3 script
-if enableWeb3
+if enableWeb3 || isBoard && board.settings.enableWeb3
 	script(src=`/js/web3.js?v=${commit}`)
 
 //- deposit confiscation config, read by confiscate.js in all.js. canConfiscate

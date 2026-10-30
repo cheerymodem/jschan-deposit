@@ -11,7 +11,8 @@ const makePost = require(__dirname+'/../../models/forms/makepost.js')
 	, message = require(__dirname+'/../../lib/deposit/message.js')
 	, { checkAddress: checkAddressBans } = require(__dirname+'/../../lib/middleware/permission/bancheck.js')
 	, paramConverter = require(__dirname+'/../../lib/middleware/input/paramconverter.js')
-	, { checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js');
+	, { checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js')
+	, { recover: web3EthAccountsRecover } = require('web3-eth-accounts');
 
 //post-time deposit gate, applied on every board. Consumes the nonce, rebuilds
 //and verifies the signed message, then checks the twin. Sets res.locals.depositError
@@ -98,7 +99,7 @@ module.exports = {
 
 		const { __ } = res.locals;
 
-		const { globalLimits, disableAnonymizerFilePosting } = config.get;
+		const { globalLimits, disableAnonymizerFilePosting, enableWeb3 } = config.get;
 
 		const hasNoMandatoryFile = globalLimits.postFiles.max !== 0 && res.locals.board.settings.maxFiles !== 0 && res.locals.numFiles === 0;
 		const disableBoardAnonymizerFilePosting = res.locals.board.settings.disableAnonymizerFilePosting && !res.locals.permissions.get(Permissions.MANAGE_BOARD_GENERAL);
@@ -136,6 +137,21 @@ module.exports = {
 			{ result: lengthBody(req.body.name, 0, globalLimits.fieldLength.name), expected: false, error: __('Name must be %s characters or less', globalLimits.fieldLength.name) },
 			{ result: lengthBody(req.body.subject, 0, globalLimits.fieldLength.subject), expected: false, error: __('Subject must be %s characters or less', globalLimits.fieldLength.subject) },
 			{ result: lengthBody(req.body.email, 0, globalLimits.fieldLength.email), expected: false, error: __('Email must be %s characters or less', globalLimits.fieldLength.email) },
+			{ result: async () => {
+				if (enableWeb3 === true && res.locals.board.settings.enableWeb3 === true
+					&& req.body.message && req.body.signature && req.body.signature.length < 200) {
+					try {
+						const fixedMessage = req.body.rawMessage.replace(/\r\n/igm, '\n');
+						res.locals.recoveredAddress = await web3EthAccountsRecover(fixedMessage, req.body.signature);
+						return true;
+					} catch (e) {
+						console.warn(e);
+						return false;
+					}
+				} else  {
+					return true;
+				}
+			}, expected: true, error: __('Failed to verify message signature') },
 			{ result: depositOk, blocking: true, expected: true, error: depositError },
 		]);
 
