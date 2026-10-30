@@ -30,7 +30,6 @@ const { createHash, randomBytes } = require('crypto')
 	, deletePosts = require(__dirname+'/deletepost.js')
 	, spamCheck = require(__dirname+'/../../lib/middleware/misc/spamcheck.js')
 	, config = require(__dirname+'/../../lib/misc/config.js')
-	, { postPasswordSecret } = require(__dirname+'/../../configs/secrets.js')
 	, buildQueue = require(__dirname+'/../../lib/build/queue.js')
 	, dynamicResponse = require(__dirname+'/../../lib/misc/dynamic.js')
 	, { buildThread } = require(__dirname+'/../../lib/build/tasks.js')
@@ -433,11 +432,6 @@ module.exports = async (req, res) => {
 			};
 		}
 	}
-	let password = null;
-	if (req.body.postpassword) {
-		password = createHash('sha256').update(postPasswordSecret + req.body.postpassword).digest('base64');
-	}
-
 	//spoiler files only if board settings allow
 	const spoiler = (!isStaffOrGlobal || userPostSpoiler) && req.body.spoiler_all ? true : false;
 
@@ -483,7 +477,6 @@ module.exports = async (req, res) => {
 		'messagehash': messageHash || null,
 		'nomarkup': nomarkup || null,
 		'thread': req.body.thread || null,
-		password,
 		email,
 		spoiler,
 		signature,

@@ -16,6 +16,12 @@ module.exports = async(db, redis) => {
 			'deposit.assetDecimals': 18,
 		},
 	});
+	console.log('Retiring post passwords (post actions are signed with the deposit wallet)');
+	await db.collection('globalsettings').updateOne({ _id: 'globalsettings' }, {
+		'$unset': { 'globalLimits.fieldLength.postpassword': '', 'boardDefaults.enableWeb3': '' },
+	});
+	await db.collection('boards').updateMany({}, { '$unset': { 'settings.enableWeb3': '' } });
+	await db.collection('posts').updateMany({ 'password': { '$exists': true } }, { '$unset': { 'password': '' } });
 	console.log('Clearing globalsettings cache');
 	await redis.deletePattern('globalsettings');
 

@@ -133,12 +133,10 @@ class postFormHandler {
 		this.depositField = form.querySelector('input[name="nonce"]');
 		this.depositRequired = window.depositGate.requiresPostSign(this.postFormForDeposit === form, this.depositField != null);
 
-		//deposit-report boards: reporting needs a wallet proof too. The deposit
-		//flag and site/board live on the page's post form; the report checkboxes
-		//live on the action form. Only gate when a report is actually selected.
-		this.reportForm = form.querySelector('input[name="report"]') || form.querySelector('input[name="global_report"]')
-			? form
-			: null;
+		//public post actions (report, delete, spoiler, unlink) are signed with the
+		//deposit wallet. The action form carries the nonce field with the site/board
+		//for the message; staff action forms have none and are not signed.
+		this.actionNonceField = form.querySelector('input[name="nonce"][data-site]');
 
 		//account registration signs a username-bound message with a deposit wallet
 		this.depositRegister = form.dataset.depositSign === 'register';
@@ -295,14 +293,28 @@ class postFormHandler {
 		}
 	}
 
-	//deposit-report-required boards: sign a report-scoped message, fill the
-	//hidden fields on the action form, then submit
-	async doDepositReportSign(e) {
+	//the public actions ticked on this action form, and the ticked posts
+	selectedActions() {
+		return window.depositGate.publicActions.filter(name => {
+			const box = this.form.elements[name];
+			return box && box.checked;
+		});
+	}
+
+	selectedPosts() {
+		return Array.from(this.form.elements)
+			.filter(el => el.name === 'checkedposts' && el.checked)
+			.map(el => el.value);
+	}
+
+	//post actions: sign the actions message (site, board, actions, posts) with the
+	//deposit wallet, fill the hidden fields on the action form, then submit
+	async doDepositActionSign(e) {
 		try {
 			if (!window.ethereum || !window.ethereum.request) {
 				return doModal({
 					'title': __('Deposit'),
-					'message': __('A web3 wallet is required to report on this board.'),
+					'message': __('A web3 wallet is required for post actions.'),
 				});
 			}
 			const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -314,27 +326,22 @@ class postFormHandler {
 			}
 			//site/board come from the action form's own nonce input, since pages
 			//such as threads at the reply limit have no post form
-			const { site, board } = this.form.querySelector('input[name="nonce"]').dataset;
-			const messageContent = [
-				'jschan-deposit report',
-				`Site: ${site}`,
-				`Board: ${board}`,
-				`Nonce: ${nonce}`,
-			].join('\n');
+			const { site, board } = this.actionNonceField.dataset;
+			const messageContent = window.depositGate.buildActionsMessage({
+				site,
+				board,
+				actions: this.selectedActions(),
+				posts: this.selectedPosts(),
+				nonce,
+			});
 			const signature = await window.ethereum.request({
 				method: 'personal_sign',
 				params: [messageContent, address],
 			});
-			//fill the hidden signing fields on the action form (this.form is the
-			//action form itself on report boards)
-			const form = this.form;
-			const signatureInput = form.querySelector('input[name="signature"]');
-			const addressInput = form.querySelector('input[name="address"]');
-			const nonceInput = form.querySelector('input[name="nonce"]');
-			if (signatureInput) { signatureInput.value = signature; }
-			if (addressInput) { addressInput.value = address; }
-			if (nonceInput) { nonceInput.value = nonce; }
-			this.depositReportSigned = true;
+			this.form.querySelector('input[name="signature"]').value = signature;
+			this.form.querySelector('input[name="address"]').value = address;
+			this.actionNonceField.value = nonce;
+			this.depositActionSigned = true;
 			this.formSubmit(e);
 		} catch (err) {
 			console.warn(err);
@@ -448,24 +455,13 @@ class postFormHandler {
 			this.depositSigned = false;
 		}
 
-		//deposit-report boards: only require a report signature when a report
-		//(or global report) checkbox is actually selected for this submission
-		if (this.reportForm) {
-			const reportBox = this.reportForm.querySelector('input[name="report"]');
-			const globalReportBox = this.reportForm.querySelector('input[name="global_report"]');
-			this.depositReportRequired = window.depositGate.requiresReportSign(
-				this.reportForm.querySelector('input[name="nonce"][data-site]') != null,
-				!!(reportBox && reportBox.checked),
-				!!(globalReportBox && globalReportBox.checked));
-		} else {
-			this.depositReportRequired = false;
-		}
-		if (this.depositReportRequired) {
-			if (!this.depositReportSigned) {
+		//post actions: sign when a public action is selected for this submission
+		if (window.depositGate.requiresActionSign(this.actionNonceField != null, this.selectedActions())) {
+			if (!this.depositActionSigned) {
 				e.preventDefault();
-				return this.doDepositReportSign(e);
+				return this.doDepositActionSign(e);
 			}
-			this.depositReportSigned = false;
+			this.depositActionSigned = false;
 		}
 
 		if (this.depositRegister) {

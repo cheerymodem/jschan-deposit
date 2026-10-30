@@ -12,10 +12,29 @@ const depositGate = {
 		return isDepositPostForm && hasNonceField;
 	},
 
-	//a report only needs a wallet proof when the board is a deposit board and a
-	//report (or global report) checkbox is actually checked
-	requiresReportSign: (depositBoardPage, reportChecked, globalReportChecked) => {
-		return depositBoardPage && (reportChecked || globalReportChecked);
+	//the post actions anyone can take from a board page; each submission that
+	//selects one is signed with the deposit wallet (it replaces post passwords).
+	//Must match lib/deposit/actions.js PUBLIC_ACTIONS.
+	publicActions: ['delete', 'global_report', 'report', 'spoiler', 'unlink_file'],
+
+	//an action form needs a wallet signature when it is a public board action form
+	//(it carries the signing nonce field) and a public action is selected
+	requiresActionSign: (publicActionForm, selectedActions) => {
+		return publicActionForm && selectedActions.length > 0;
+	},
+
+	//the signed post actions message; must match lib/deposit/actions.js build()
+	//(the unit tests compare the two)
+	buildActionsMessage: ({ site, board, actions, posts, nonce }) => {
+		const postIds = [...new Set(posts.map(Number))].sort((a, b) => a - b);
+		return [
+			'jschan-deposit actions',
+			`Site: ${site}`,
+			`Board: ${board}`,
+			`Actions: ${[...actions].sort().join(',')}`,
+			`Posts: ${postIds.join(',')}`,
+			`Nonce: ${nonce}`,
+		].join('\n');
 	},
 
 };

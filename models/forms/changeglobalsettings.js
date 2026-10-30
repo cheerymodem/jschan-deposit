@@ -280,7 +280,6 @@ module.exports = async (req, res) => {
 				name: numberSetting(req.body.global_limits_field_length_name, oldSettings.globalLimits.fieldLength.name),
 				email: numberSetting(req.body.global_limits_field_length_email, oldSettings.globalLimits.fieldLength.email),
 				subject: numberSetting(req.body.global_limits_field_length_subject, oldSettings.globalLimits.fieldLength.subject),
-				postpassword: numberSetting(req.body.global_limits_field_length_postpassword, oldSettings.globalLimits.fieldLength.postpassword),
 				message: numberSetting(req.body.global_limits_field_length_message, oldSettings.globalLimits.fieldLength.message),
 				report_reason: numberSetting(req.body.global_limits_field_length_report_reason, oldSettings.globalLimits.fieldLength.report_reason),
 				ban_reason: numberSetting(req.body.global_limits_field_length_ban_reason, oldSettings.globalLimits.fieldLength.ban_reason),

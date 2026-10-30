@@ -8,60 +8,70 @@ const { Posts, Boards, Deposits } = require(__dirname+'/../../db/')
 	, actionChecker = require(__dirname+'/../../lib/input/actionchecker.js')
 	, paramConverter = require(__dirname+'/../../lib/middleware/input/paramconverter.js')
 	, { checkAddress } = require(__dirname+'/../../lib/middleware/permission/bancheck.js')
-	, { checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js');
+	, { checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js')
+	, cache = require(__dirname+'/../../lib/redis/redis.js')
+	, actionMessage = require(__dirname+'/../../lib/deposit/actions.js');
 
-//validate a wallet-bound report proof: the submitted address must have an active
-//twin and the signature must recover to it over the report-scoped message. No
-//live RPC at request time (invariant 2). Staff actions via /modactions are exempt.
-const verifyReportDeposit = async (req, res) => {
+//Public post actions (report, delete, spoiler, unlink) are authenticated by a
+//deposit wallet signature over the actions message, replacing post passwords.
+//Reports also need an active twin (no live RPC at request time, invariant 2);
+//delete/spoiler/unlink only need the signature, and the action handler limits
+//them to the wallet's own posts. Staff actions via /modactions are exempt.
+//Sets res.locals.actionAddress on success, res.locals.actionDepositError on failure.
+const verifyActionDeposit = async (req, res) => {
 	const { __ } = res.locals;
 	const { deposit } = config.get;
-	const isReport = existsBody(req.body.report) || existsBody(req.body.global_report);
-	if (!isReport || req.path.endsWith('/modactions')) {
-		res.locals.reportDepositError = null;
+	res.locals.actionDepositError = null;
+	const selected = actionMessage.selected(req.body);
+	if (selected.length === 0 || req.path.endsWith('/modactions')) {
 		return true;
 	}
 	if (deposit.enabled !== true) {
-		res.locals.reportDepositError = __('Reporting is unavailable while the deposit system is disabled');
+		res.locals.actionDepositError = __('Post actions are unavailable while the deposit system is disabled');
 		return false;
 	}
 
 	const address = String(req.body.address || '').toLowerCase();
 	const nonce = String(req.body.nonce || '');
 	const signature = String(req.body.signature || '');
-	if (!/^0x[a-fA-F0-9]{40}$/.test(address) || !nonce || !signature) {
-		res.locals.reportDepositError = __('A wallet deposit signature is required to report posts');
+	if (!/^0x[a-f0-9]{40}$/.test(address) || !nonce || !signature) {
+		res.locals.actionDepositError = __('A wallet signature is required for post actions');
 		return false;
 	}
 
-	//consume the report nonce; must exist and be unused
-	const nonceKey = `nonce:${address}:${nonce}`;
-	if ((await require(__dirname+'/../../lib/redis/redis.js').del(nonceKey)) !== 1) {
-		res.locals.reportDepositError = __('Invalid or expired signature nonce. Refresh the page and try again');
+	//consume the nonce; must exist and be unused
+	if ((await cache.del(`nonce:${address}:${nonce}`)) !== 1) {
+		res.locals.actionDepositError = __('Invalid or expired signature nonce. Refresh the page and try again');
 		return false;
 	}
 
 	let recovered;
 	try {
-		const reportMessage = require(__dirname+'/../../lib/deposit/report.js');
-		recovered = (await reportMessage.verify({ site: config.get.meta.url, board: req.params.board, nonce, signature })).toLowerCase();
+		recovered = (await actionMessage.verify({
+			site: config.get.meta.url,
+			board: req.params.board,
+			actions: selected,
+			posts: req.body.checkedposts || [],
+			nonce,
+			signature,
+		})).toLowerCase();
 	} catch (e) {
-		res.locals.reportDepositError = __('Failed to verify message signature');
-		return false;
+		recovered = null;
 	}
 	if (recovered !== address) {
-		res.locals.reportDepositError = __('Failed to verify message signature');
+		res.locals.actionDepositError = __('Failed to verify message signature');
 		return false;
 	}
 
-	const twin = await Deposits.findOne({ _id: address });
-	if (!twin || twin.status !== 'active') {
-		res.locals.reportDepositError = __('No active deposit found for this wallet');
-		return false;
+	if (selected.includes('report') || selected.includes('global_report')) {
+		const twin = await Deposits.findOne({ _id: address });
+		if (!twin || twin.status !== 'active') {
+			res.locals.actionDepositError = __('No active deposit found for this wallet');
+			return false;
+		}
 	}
 
-	res.locals.reportDepositError = null;
-	res.locals.reportDepositAddress = address;
+	res.locals.actionAddress = address;
 	return true;
 };
 
@@ -69,7 +79,7 @@ module.exports = {
 
 	paramConverter: paramConverter({
 		timeFields: ['ban_duration'],
-		trimFields: ['postpassword', 'report_reason', 'ban_reason', 'log_message', 'move_to_board', 'address', 'nonce', 'signature'],
+		trimFields: ['report_reason', 'ban_reason', 'log_message', 'move_to_board', 'address', 'nonce', 'signature'],
 		allowedArrays: ['checkedreports', 'checkedposts'],
 		numberFields: ['move_to_thread', 'sticky'],
 		numberArrays: ['checkedposts'],
@@ -83,10 +93,10 @@ module.exports = {
 
 		res.locals.actions = actionChecker(req, res);
 
-		const reportDepositOk = await verifyReportDeposit(req, res);
+		const actionDepositOk = await verifyActionDeposit(req, res);
 		//wallet bans apply once the signature proved control of the wallet
-		if (reportDepositOk && res.locals.reportDepositAddress
-			&& await checkAddress(req, res, res.locals.reportDepositAddress)) {
+		if (actionDepositOk && res.locals.actionAddress
+			&& await checkAddress(req, res, res.locals.actionAddress)) {
 			return;
 		}
 
@@ -104,13 +114,12 @@ module.exports = {
 			{ result: (existsBody(req.body.spoiler) && !res.locals.board.settings.userPostSpoiler), permission: Permissions.MANAGE_BOARD_GENERAL, expected: false, error: __('User file spoiling is disabled on this board') },
 			{ result: (existsBody(req.body.unlink_file) && !res.locals.board.settings.userPostUnlink), permission: Permissions.MANAGE_BOARD_GENERAL, expected: false, error: __('User file unlinking is disabled on this board') },
 			{ result: (existsBody(req.body.edit) && lengthBody(req.body.checkedposts, 1, 1)), expected: false, error: __('Must select only 1 post for edit action') },
-			{ result: lengthBody(req.body.postpassword, 0, globalLimits.fieldLength.postpassword), expected: false, error: __('Password must be %s characters or less', globalLimits.fieldLength.postpassword) },
 			{ result: lengthBody(req.body.report_reason, 0, globalLimits.fieldLength.report_reason), expected: false, error: __('Report must be %s characters or less', globalLimits.fieldLength.report_reason) },
 			{ result: lengthBody(req.body.ban_reason, 0, globalLimits.fieldLength.ban_reason), expected: false, error: __('Ban reason must be %s characters or less', globalLimits.fieldLength.ban_reason) },
 			{ result: lengthBody(req.body.log_message, 0, globalLimits.fieldLength.log_message), expected: false, error: __('Modlog message must be %s characters or less', globalLimits.fieldLength.log_message) },
 			{ result: (existsBody(req.body.report || req.body.global_report) && lengthBody(req.body.report_reason, 1)), expected: false, blocking: true, error: __('Reports must have a reason') },
 			{ result: (existsBody(req.body.move) && (!req.body.move_to_thread && !req.body.move_to_board)), expected: false, error: __('Must input destinaton thread number or board to move posts') },
-			{ result: reportDepositOk, blocking: true, expected: true, error: res.locals.reportDepositError },
+			{ result: actionDepositOk, blocking: true, expected: true, error: res.locals.actionDepositError },
 			{ result: async () => {
 				if (req.body.move && req.body.move_to_thread) {
 					const moveBoard = req.body.move_to_board || req.params.board;

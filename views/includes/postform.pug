@@ -71,10 +71,6 @@ section.form-wrapper.flex-center
 						label.noselect.postform-style.ph-5.ml-1.fh
 							input(type='checkbox' name='tegakireplay')
 							| #{__('Replayable?')}
-		if board.settings.userPostSpoiler || board.settings.userPostDelete || board.settings.userPostUnlink || modview
-			section.row
-				.label Password
-				input(type='password', name='postpassword', placeholder='Password to delete/spoiler/unlink later' maxlength='50' autocomplete='new-password')
 		if modview || board.settings.customFlags === true
 			- const boardFlags = Object.entries(board.flags)
 			if boardFlags.length > 0

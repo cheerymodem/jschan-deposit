@@ -12,7 +12,7 @@ module.exports = {
 
 	paramConverter: paramConverter({
 		timeFields: ['ban_duration'],
-		trimFields: ['postpassword', 'report_reason', 'ban_reason', 'log_message'],
+		trimFields: ['report_reason', 'ban_reason', 'log_message'],
 		allowedArrays: ['checkedreports', 'globalcheckedposts'],
 		numberFields: ['move_to_thread'],
 		objectIdArrays: ['globalcheckedposts']
@@ -38,7 +38,6 @@ module.exports = {
 			{ result: (res.locals.actions.numGlobal > 0 && res.locals.actions.validActions.length <= res.locals.actions.numGlobal), expected: true, blocking: true, error: __('Invalid actions selected') },
 			{ result: res.locals.actions.hasPermission, expected: true, blocking: true, error: __('No permission') },
 			{ result: (existsBody(req.body.edit) && lengthBody(req.body.globalcheckedposts, 1, 1)), expected: false, error: __('Must select only 1 post for edit action') },
-			{ result: lengthBody(req.body.postpassword, 0, globalLimits.fieldLength.postpassword), expected: false, error: __('Password must be %s characters or less', globalLimits.fieldLength.postpassword) },
 			{ result: lengthBody(req.body.ban_reason, 0, globalLimits.fieldLength.ban_reason), expected: false, error: __('Ban reason must be %s characters or less', globalLimits.fieldLength.ban_reason) },
 			{ result: lengthBody(req.body.log_message, 0, globalLimits.fieldLength.log_message), expected: false, error: __('Modlog message must be %s characters or less', globalLimits.fieldLength.log_message) },
 		]);

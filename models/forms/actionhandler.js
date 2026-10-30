@@ -20,9 +20,7 @@ const { Posts, Boards, Modlogs } = require(__dirname+'/../../db/')
 	, dynamicResponse = require(__dirname+'/../../lib/misc/dynamic.js')
 	, { Permissions } = require(__dirname+'/../../lib/permission/permissions.js')
 	, buildQueue = require(__dirname+'/../../lib/build/queue.js')
-	, { postPasswordSecret } = require(__dirname+'/../../configs/secrets.js')
-	, threadRegex = /\/[a-z0-9]+\/(?:manage\/)?thread\/(\d+)\.html/i
-	, { createHash, timingSafeEqual } = require('crypto');
+	, threadRegex = /\/[a-z0-9]+\/(?:manage\/)?thread\/(\d+)\.html/i;
 
 module.exports = async (req, res, next) => {
 
@@ -39,31 +37,25 @@ module.exports = async (req, res, next) => {
 	}
 
 	/*
-		Handle checking passwords (in a time-constant) when doing actions that require a password.
-		Staff skip this section because they don't need passwords to do such actions.
+		Owner actions (delete, spoiler, unlink) by non-staff only apply to posts made
+		with the wallet that signed the request (res.locals.actionAddress, verified by
+		the actions controller). This replaces post passwords. Staff skip it.
 	*/
 	const isStaffOrGlobal = res.locals.permissions.hasAny(Permissions.MANAGE_GLOBAL_GENERAL, Permissions.MANAGE_BOARD_GENERAL);
-	if (!isStaffOrGlobal && res.locals.actions.numPasswords > 0) {
-		let passwordPosts = [];
-		if (req.body.postpassword && req.body.postpassword.length > 0) {
-			const inputPasswordHash = createHash('sha256').update(postPasswordSecret + req.body.postpassword).digest('base64');
-			const inputPasswordBuffer = Buffer.from(inputPasswordHash);
-			passwordPosts = res.locals.posts.filter(post => {
-				if (post.password != null) { //null password doesnt matter for timing attack, it cant be deleted by non-staff
-					const postBuffer = Buffer.from(post.password);
-					return timingSafeEqual(inputPasswordBuffer, postBuffer);
-				}
-			});
-		}
-		if (passwordPosts.length === 0) {
+	const actionAddress = res.locals.actionAddress || null;
+	if (!isStaffOrGlobal && res.locals.actions.numOwner > 0) {
+		const ownPosts = actionAddress
+			? res.locals.posts.filter(post => post.address === actionAddress)
+			: [];
+		if (ownPosts.length === 0) {
 			return dynamicResponse(req, res, 403, 'message', {
 				'title': __('Forbidden'),
-				'error': __('Password did not match any selected posts'),
+				'error': __('None of the selected posts were made with this wallet'),
 				redirect,
 			});
 		}
-		//if the password is correct for at least *some* posts, silently ignore the wrong ones (dont action them), and continue.
-		res.locals.posts = passwordPosts;
+		//if the wallet made at least *some* of the posts, silently ignore the others (dont action them), and continue.
+		res.locals.posts = ownPosts;
 	}
 
 	const deleting = req.body.delete || req.body.delete_ip_board || req.body.delete_ip_global || req.body.delete_ip_thread;
@@ -209,7 +201,7 @@ module.exports = async (req, res, next) => {
 		//moderator and author deletes now strip to tombstones instead of hard deletion
 		//(deleteboard/thread pruning/cyclic still hard-delete separately). Deleting an
 		//OP no longer removes its thread. deleteIp variants are included.
-		const reason = (isStaffOrGlobal || !req.body.postpassword) ? 'moderator' : 'author';
+		const reason = (isStaffOrGlobal || !actionAddress) ? 'moderator' : 'author';
 		const stripped = await tombstone.stripPosts(res.locals.posts, reason);
 		messages.push(__n('%s posts removed', stripped));
 		if (stripped > 0) {

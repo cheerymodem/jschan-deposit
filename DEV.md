@@ -124,7 +124,8 @@ MetaMask pointed at `http://localhost:8545` chain 31337 with the Hardhat test ac
    MetaMask. Staff views of a signed post (mod view, recent, reports) also have a "Confiscate
    deposit" button for staff with both `MANAGE_GLOBAL_BANS` and `VIEW_RAW_IP`. The posts become "Post removed: deposit confiscated" tombstones that link to the day's
    modlog; the modlog row shows the tx hash and amount.
-6. **Author and moderator delete**: author deletes via the post password and a moderator deletes;
+6. **Author and moderator delete**: the author deletes by ticking the post and Delete, then signing
+   with the posting wallet, and a moderator deletes;
    both leave tombstones ("Post removed by author" / "Post removed by moderator") instead of hard
    deleting.
 7. **No addresses in public output**: check `/<board>/thread/N.json`, `/<board>/index.json` and

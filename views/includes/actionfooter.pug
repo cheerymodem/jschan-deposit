@@ -2,8 +2,10 @@ details.toggle-label#actionform
 	summary.collapse#action-menu #{__('Show Post Actions')}
 	.actions
 		input(type='hidden' name='hide_name' value='1')
-		//- reports are signed with the reporter's deposit wallet. The site/board for the
-		//- signed message live here because some pages (full threads) have no post form.
+		//- post actions are signed with the deposit wallet (reports need an active
+		//- deposit; delete/spoiler/unlink apply to that wallet's own posts). The
+		//- site/board for the signed message live here because some pages (full
+		//- threads) have no post form.
 		input(type='hidden' name='signature' value='')
 		input(type='hidden' name='address' value='')
 		input(type='hidden' name='nonce' value='' data-site=meta.url data-board=board._id)
@@ -20,9 +22,6 @@ details.toggle-label#actionform
 			label
 				input.post-check(type='checkbox', name='spoiler' value='1')
 				| #{__('Spoiler Files')}
-		if board.settings.userPostSpoiler || board.settings.userPostUnlink || board.settings.userPostDelete
-			label
-				input#password(type='password', name='postpassword', placeholder=__('Password') autocomplete='off')
 		label
 			input.post-check(type='checkbox', name='report' value='1')
 			| #{__('Report')}

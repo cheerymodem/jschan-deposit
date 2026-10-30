@@ -321,7 +321,6 @@ module.exports = {
 			name: 100,
 			email: 100,
 			subject: 100,
-			postpassword: 100,
 			message: 20000,
 			//reports/post actions
 			report_reason: 100,

@@ -18,7 +18,7 @@ from the refundable deposit instead of identity.
 | Signing | Every post is signed (no posting sessions) |
 | Deposit check | Server-side "twin" of contract state, fed by event polling. No live RPC fallback at post time |
 | Who may post | Twin status `active` only. Blocked as soon as `WithdrawalInitiated` is seen |
-| Scope | Every board requires a deposit (no per-board toggle). Captchas and block bypasses are unhooked; reports and account registration are signed by an active deposit wallet instead. One account per wallet, enforced by a keyed hash of the address (`accounts.walletKey`, HMAC with `ipHashSecret`), never the address itself |
+| Scope | Every board requires a deposit (no per-board toggle). Captchas and block bypasses are unhooked; reports and account registration are signed by an active deposit wallet instead. Post passwords are retired: delete, spoiler and unlink are signed by the posting wallet and apply only to its own posts. Wallet bans are final (never appealable). One account per wallet, enforced by a keyed hash of the address (`accounts.walletKey`, HMAC with `ipHashSecret`), never the address itself |
 | Confiscation | Moderator's browser wallet (must equal `owner()`) calls `confiscate()` via MetaMask; server verifies the receipt |
 | After confiscation | No extra ban. A fresh deposit restores posting |
 | Permissions | Reuse existing: see addresses = `VIEW_RAW_IP`; Deposits page = `MANAGE_GLOBAL_BANS`; confiscate = both, since the transaction needs the address. Without `VIEW_RAW_IP` the Deposits page shows keyed tags, not address prefixes |
@@ -44,7 +44,7 @@ posting sessions, mainnet deployment.
 | exited (`DepositWithdrawn`, incl. `privWithdraw`) | Tombstone "Post removed: deposit withdrawn" | Same | Stripped |
 | `DepositConfiscated` | Tombstone "Post removed: deposit confiscated" + link to modlog entry | Same | Stripped; modlog keeps tx hash, amount, links |
 | Mod delete | Tombstone "Post removed by moderator" | Same | Stripped; normal modlog entry |
-| Author delete (post password) | Tombstone "Post removed by author" | Same | Stripped |
+| Author delete (wallet-signed) | Tombstone "Post removed by author" | Same | Stripped |
 
 The contract has no "cancel withdrawal", so `withdrawing` only moves forward to exited or
 confiscated. A key that stays `withdrawing` past `withdrawAt` without calling

@@ -1,20 +1,5 @@
-/* globals setDefaultLocalStorage setLocalStorage */
-const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/';
-const generatePassword = () => {
-	try {
-		if (window.crypto) {
-			const buf = new Uint8Array(20); //8 keeps charcodes within range
-			window.crypto.getRandomValues(buf);
-			return btoa(String.fromCharCode.apply(null, buf));
-		}
-	} catch (e) { /* Uncaught DOMException: The operation failed for an operation-specific reason, thanks firefox */ }
-	return new Array(20)
-		.fill(null)
-		.map(() => charset[Math.floor(Math.random()*charset.length)])
-		.join('');
-};
-
-setDefaultLocalStorage('postpassword', generatePassword());
+/* globals setLocalStorage */
+//post passwords are retired: post actions are signed with the deposit wallet
 
 class syncedField {
 	constructor(selector, key, oneWay=false, persistent=true) {
@@ -76,7 +61,6 @@ class syncedField {
 
 window.addEventListener('settingsReady', () => {
 
-	new syncedField('input[name="postpassword"]', 'postpassword');
 	new syncedField('input[name="name"]', 'name');
 
 	const boardUri = window.location.pathname.split('/')[1];
