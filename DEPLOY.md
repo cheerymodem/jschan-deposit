@@ -62,7 +62,8 @@ settings (Hardhat keys, `JSCHAN_IP=0.0.0.0`, default passwords) to a public serv
 - **Keep `enableWeb3` off.** Upstream's web3 login signs a bare `Nonce: ...` message with no site in
   it, so a phishing page could get a wallet owner to sign one and log in as them.
 - Confiscation needs a staff member with both `MANAGE_GLOBAL_BANS` and `VIEW_RAW_IP`, using the
-  contract owner wallet in their browser.
+  contract owner wallet in their browser. It stops posting but leaves the account alone; to deal with
+  a rogue account holder, also disable or delete the account (Global management, Accounts).
 
 ## What the fork already limits
 

@@ -20,7 +20,7 @@ from the refundable deposit instead of identity.
 | Who may post | Twin status `active` only. Blocked as soon as `WithdrawalInitiated` is seen |
 | Scope | Every board requires a deposit (no per-board toggle). Captchas and block bypasses are unhooked; reports and account registration are signed by an active deposit wallet instead. Post passwords are retired: delete, spoiler and unlink are signed by the posting wallet and apply only to its own posts. Wallet bans are final (never appealable). Bans are off chain (jschan's bans collection, keyed by wallet); word filter auto bans on signed posts ban the wallet too. Web3 accounts always act with their name hidden, since their username is the wallet. One account per wallet, enforced by a keyed hash of the address (`accounts.walletKey`, HMAC with `ipHashSecret`), never the address itself |
 | Confiscation | Moderator's browser wallet (must equal `owner()`) calls `confiscate()` via MetaMask; server verifies the receipt |
-| After confiscation | No extra ban. A fresh deposit restores posting |
+| After confiscation | No extra ban. A fresh deposit restores posting. Accounts are untouched: confiscation stops posting, and disabling a rogue account (board creation, board pages, staff roles) is a separate step in account management |
 | Permissions | Reuse existing: see addresses = `VIEW_RAW_IP`; Deposits page = `MANAGE_GLOBAL_BANS`; confiscate = both, since the transaction needs the address. Without `VIEW_RAW_IP` the Deposits page shows keyed tags, not address prefixes |
 | Withdrawal started | Author's posts are hidden from the public immediately, still fully visible to staff |
 | Deposit exited | Author's posts are stripped to tombstones immediately (no batching/jitter in v1) |

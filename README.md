@@ -75,9 +75,11 @@ the whole anti-spam load, with the public never seeing which wallet made which p
 - **Confiscation is public by design**: the modlog entry lists the removed posts and the transaction
   hash, and the transaction names the wallet on chain, so a confiscated wallet is publicly linked to
   those posts.
-- **Accounts outlive deposits**: registering needs a wallet with an active deposit, but an existing
-  account keeps its non-posting abilities (board creation, board pages and settings) after that
-  deposit is withdrawn or confiscated.
+- **Accounts outlive deposits, by design**: registering needs a wallet with an active deposit, but
+  an account keeps its non-posting abilities (board creation, board pages and settings, staff roles)
+  after that deposit is withdrawn or confiscated. Dealing with a trusted user who goes rogue takes
+  two steps: confiscate to stop the posting, then disable or delete the account in global
+  management.
 - **Rate limits skip anonymizers**: Tor and other anonymizer users share one IP cloak, so the
   per-IP limits do not apply to them (as with upstream's quotas). Per-username and per-wallet limits
   still do; cap total rates at the reverse proxy.
