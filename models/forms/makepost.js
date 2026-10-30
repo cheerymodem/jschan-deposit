@@ -460,14 +460,10 @@ module.exports = async (req, res) => {
 	const nomarkup = prepareMarkdown(req.body.message, true);
 	const { message, quotes, crossquotes } = await messageHandler(nomarkup, req.params.board, req.body.thread, res.locals.permissions);
 
-	//web3 sig
+	//deposit signature: the verified, lowered address (staff modposts have none)
 	let signature = null
 		, address = null;
-	if (res.locals.recoveredAddress) {
-		signature = req.body.signature;
-		address = res.locals.recoveredAddress;
-	} else if (res.locals.depositAddress) {
-		//deposit-gated boards: use the verified, lowered address
+	if (res.locals.depositAddress) {
 		signature = req.body.signature;
 		address = res.locals.depositAddress;
 	}

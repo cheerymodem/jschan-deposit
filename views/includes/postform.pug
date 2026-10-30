@@ -85,11 +85,6 @@ section.form-wrapper.flex-center
 						each flag in boardFlags
 							option(value=flag[0] data-src=`/flag/${board._id}/${flag[1]}`) #{flag[0]}
 					img.jsonly#selected-flag
-		if enableWeb3 === true && board.settings.enableWeb3 === true
-			section.row.jsonly.web3
-				.label #{__('Web3')}
-				input.dummy-link.web3-sign(type='button' value=__('Sign') disabled=true)
-				textarea.ml-1.no-resize(name='signature', rows='1', autocomplete='off' readonly)
 		//- every board needs a deposit; staff modposts are exempt server-side
 		unless modview
 			input(type='hidden' name='signature' value='')

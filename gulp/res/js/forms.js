@@ -120,12 +120,6 @@ class postFormHandler {
 			this.tegakiButton.addEventListener('click', () => this.doTegaki());
 		}
 
-		//if web3 signature button, attach the listeners for message signing
-		this.web3SignButton = form.querySelector('.web3-sign');
-		if (this.web3SignButton) {
-			this.web3SignButton.addEventListener('click', () => this.doWeb3Sign());
-		}
-
 		//if web3 login button, do login procedure on click
 		this.web3LoginButton = form.querySelector('.web3-login');
 		if (this.web3LoginButton) {
@@ -178,7 +172,6 @@ class postFormHandler {
 		}
 
 		form.addEventListener('submit', e => this.formSubmit(e));
-		form.addEventListener('messageBoxChange', () => this.handleMessageChange());
 	}
 
 	reset() {
@@ -245,15 +238,6 @@ class postFormHandler {
 		Tegaki.setColorPalette(2); //picks a better default color palette
 	}
 
-	handleMessageChange() {
-		if (!this.messageBox) { return; }
-		const emptyMessage = this.messageBox.value.length === 0;
-		if (this.web3SignButton) {
-			this.form.elements.signature.value = '';
-			this.web3SignButton.disabled = emptyMessage;
-		}
-	}
-
 	async doWeb3Login(e) {
 		e.target.style.pointerEvents = 'none'; //way of disabling dummy button to prevent double click
 		try {
@@ -275,23 +259,6 @@ class postFormHandler {
 			console.warn(e);
 		} finally {
 			e.target.style.pointerEvents = 'auto';
-		}
-	}
-
-	async doWeb3Sign() {
-		if (!this.messageBox.value || this.messageBox.value.length === 0) {
-			return;
-		}
-		const messageContent = this.messageBox.value;
-		try {
-			const accounts = await window.jschanweb3.eth.requestAccounts();
-			const signature = await window.jschanweb3.currentProvider.request({
-				method: 'personal_sign',
-				params: [messageContent, accounts[0]],
-			});
-			this.form.elements.signature.value = signature;
-		} catch (e) {
-			console.warn(e);
 		}
 	}
 
