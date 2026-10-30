@@ -79,9 +79,11 @@ module.exports = {
 	},
 
 	//block bypasses
+	//block bypasses are captcha based, and the captchas are unhooked in this fork:
+	//keep enabled, forceAnonymizers and bypassDnsbl off
 	blockBypass: {
 		enabled: false,
-		forceAnonymizers: true,
+		forceAnonymizers: false,
 		expireAfterUses: 50, //however many (attempted) posts per block bypass captcha
 		expireAfterTime: 86400000, //expiry in ms regardless if the limit was reached, default 1 day
 		bypassDnsbl: false,

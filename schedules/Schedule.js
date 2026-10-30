@@ -25,30 +25,17 @@ module.exports = class Schedule {
 
 	//stop the schedule
 	stop () {
-		if (this.intervalId) {
-			clearInterval(this.intervalId);
-			this.intervalId = null;
-		}
+		clearInterval(this.interval);
+		this.intervalId = null;
 	}
 
 	//check config and either start or stop
 	update () {
-		if (!this.condition || resolveDotProp(config.get, this.condition)) {
+		if (!this.condition || config.get[this.condition]) {
 			this.start();
 		} else {
 			this.stop();
 		}
 	}
 
-};
-
-//config.get[path] does not resolve dotted keys like 'deposit.enabled'. Walk the
-//object so a condition can reference a nested setting.
-const resolveDotProp = (object, prop) => {
-	return prop.split('.').reduce((acc, key) => {
-		if (acc == null) {
-			return acc;
-		}
-		return acc[key];
-	}, object);
 };

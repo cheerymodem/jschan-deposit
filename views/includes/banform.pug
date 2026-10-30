@@ -2,7 +2,7 @@ form.form-post(action=`/forms/appeal`, enctype='application/x-www-form-urlencode
 	include ./bantable.pug
 		for ban in bans
 			+ban(ban, true)
-	- const allowAppeal = bans.filter(ban => ban.allowAppeal === true && !ban.appeal && !ban.address).length > 0;
+	- const allowAppeal = bans.filter(ban => ban.allowAppeal === true && !ban.appeal).length > 0;
 	if allowAppeal === true
 		h4.no-m-p #{__('Appeal')}:
 			.form-wrapper.flexleft.mt-10

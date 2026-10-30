@@ -43,7 +43,8 @@ module.exports = async (req, res, next) => {
 	*/
 	const isStaffOrGlobal = res.locals.permissions.hasAny(Permissions.MANAGE_GLOBAL_GENERAL, Permissions.MANAGE_BOARD_GENERAL);
 	const actionAddress = res.locals.actionAddress || null;
-	if (!isStaffOrGlobal && res.locals.actions.numOwner > 0) {
+	//(actionchecker's "passwords" actions are the owner actions)
+	if (!isStaffOrGlobal && res.locals.actions.numPasswords > 0) {
 		const ownPosts = actionAddress
 			? res.locals.posts.filter(post => post.address === actionAddress)
 			: [];

@@ -14,6 +14,10 @@ module.exports = async(db, redis) => {
 			'deposit.interfaceUrl': '',
 			'deposit.assetSymbol': 'ETH',
 			'deposit.assetDecimals': 18,
+			//block bypasses are captcha based and the captchas are unhooked
+			'blockBypass.enabled': false,
+			'blockBypass.forceAnonymizers': false,
+			'blockBypass.bypassDnsbl': false,
 		},
 	});
 	console.log('Retiring post passwords (post actions are signed with the deposit wallet)');
@@ -22,6 +26,8 @@ module.exports = async(db, redis) => {
 	});
 	await db.collection('boards').updateMany({}, { '$unset': { 'settings.enableWeb3': '' } });
 	await db.collection('posts').updateMany({ 'password': { '$exists': true } }, { '$unset': { 'password': '' } });
+	//tombstones once unset files; upstream code reads it as an array
+	await db.collection('posts').updateMany({ 'files': { '$exists': false } }, { '$set': { 'files': [] } });
 	console.log('Clearing globalsettings cache');
 	await redis.deletePattern('globalsettings');
 

@@ -214,7 +214,7 @@ module.exports = {
 					},
 					'replyfiles': {
 						'$sum': {
-							'$size': { '$ifNull': ['$files', []] }
+							'$size': '$files'
 						}
 					},
 					'bumped': {

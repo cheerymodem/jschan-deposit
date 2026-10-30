@@ -76,7 +76,8 @@ module.exports = async (req, res) => {
 				'issuer': req.session.user,
 				'date': banDate,
 				'expireAt': banExpiry,
-				//wallet bans are final, never appealable
+				//wallet bans are final, never appealable (and appeals match by ip cloak,
+				//which a wallet ban's keyed cloak never equals)
 				'allowAppeal': banAddress ? false : allowAppeal,
 				'appeal': null,
 				'showUser': !req.body.hide_name,

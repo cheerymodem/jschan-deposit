@@ -113,9 +113,7 @@ module.exports = {
 			},
 			'ip.cloak': ip,
 			'allowAppeal': true,
-			'appeal': null,
-			//wallet bans are final
-			'address': null,
+			'appeal': null
 		}, {
 			'$set': {
 				'appeal': appeal,
