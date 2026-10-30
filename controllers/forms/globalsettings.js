@@ -83,22 +83,27 @@ module.exports = {
 			{ result: () => {
 				if (req.body.archive_links) {
 					/* eslint-disable no-useless-escape */
-					return /https?\:\/\/[^\s<>\[\]{}|\\^]+%s[^\s<>\[\]{}|\\^]*/i.test(req.body.archive_links);
+					return /^https?\:\/\/[^\s<>\[\]{}|\\^]+%s[^\s<>\[\]{}|\\^]*$/i.test(req.body.archive_links);
 				}
 				return false;
 			}, expected: true, error: __('Invalid archive links URL format, must be a link containing %s where the url param belongs.') },
 			{ result: () => {
 				if (req.body.reverse_links) {
-					return /https?\:\/\/[^\s<>\[\]{}|\\^]+%s[^\s<>\[\]{}|\\^]*/i.test(req.body.reverse_links);
+					return /^https?\:\/\/[^\s<>\[\]{}|\\^]+%s[^\s<>\[\]{}|\\^]*$/i.test(req.body.reverse_links);
 				}
 				return false;
 			}, expected: true, error: __('Invalid reverse image search links URL format, must be a link containing %s where the url param belongs.') },
 			{ result: () => {
 				if (req.body.ethereum_links) {
-					return /https?\:\/\/[^\s<>\[\]{}|\\^]+%s[^\s<>\[\]{}|\\^]*/i.test(req.body.ethereum_links);
+					return /^https?\:\/\/[^\s<>\[\]{}|\\^]+%s[^\s<>\[\]{}|\\^]*$/i.test(req.body.ethereum_links);
 				}
 				return false;
 			}, expected: true, error: __('Invalid ethereum links URL format, must be a link containing %s where the url param belongs.') },
+			//deposit settings: interfaceUrl is rendered as a public link and rpcUrl is
+			//fetched by the server, so only plain http(s) URLs
+			{ result: !req.body.deposit_rpc_url || /^https?:\/\/[^\s<>"'`]+$/i.test(req.body.deposit_rpc_url), expected: true, error: __('Deposit RPC URL must be an http(s) URL') },
+			{ result: !req.body.deposit_interface_url || /^https?:\/\/[^\s<>"'`]+$/i.test(req.body.deposit_interface_url), expected: true, error: __('Deposit interface URL must be an http(s) URL') },
+			{ result: !req.body.deposit_contract_address || /^0x[a-fA-F0-9]{40}$/.test(req.body.deposit_contract_address), expected: true, error: __('Deposit contract address must be a 0x address') },
 			{ result: existsBody(req.body.referrer_check) ? lengthBody(req.body.allowed_hosts, 1) : false, expected: false, error: __('Please enter at least one allowed host in the "Allowed Hosts" field when the "Referer Check" option is selected.') },
 			{ result: numberBody(req.body.inactive_account_time), expected: true, error: __('Invalid inactive account time') },
 			{ result: numberBody(req.body.inactive_account_action, 0, 2), expected: true, error: __('Inactive account action must be a number from 0-2') },

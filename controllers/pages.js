@@ -5,6 +5,8 @@ const express  = require('express')
 	, Boards = require(__dirname+'/../db/boards.js')
 	, Posts = require(__dirname+'/../db/posts.js')
 	//middlewares
+	, processIp = require(__dirname+'/../lib/middleware/ip/processip.js')
+	, geoIp = require(__dirname+'/../lib/middleware/ip/geoip.js')
 	, calcPerms = require(__dirname+'/../lib/middleware/permission/calcpermsmiddleware.js')
 	, { Permissions } = require(__dirname+'/../lib/permission/permissions.js')
 	, hasPerms = require(__dirname+'/../lib/middleware/permission/haspermsmiddleware.js')
@@ -13,6 +15,7 @@ const express  = require('express')
 	, useSession = require(__dirname+'/../lib/middleware/permission/usesession.js')
 	, sessionRefresh = require(__dirname+'/../lib/middleware/permission/sessionrefresh.js')
 	, csrf = require(__dirname+'/../lib/middleware/misc/csrfmiddleware.js')
+	, ratelimit = require(__dirname+'/../lib/deposit/ratelimit.js')
 	, { setBoardLanguage } = require(__dirname+'/../lib/middleware/locale/locale.js')
 	//page models
 	, { manageRecent, manageReports, manageAssets, manageSettings, manageBans, manageFilters, editFilter, editCustomPage, manageMyPermissions,
@@ -127,7 +130,9 @@ router.get('/account.html', useSession, sessionRefresh, isLoggedIn, calcPerms, c
 router.get('/mypermissions.html', useSession, sessionRefresh, isLoggedIn, calcPerms, myPermissions);
 router.get('/twofactor.html', useSession, sessionRefresh, isLoggedIn, calcPerms, csrf, setupTwoFactor);
 router.get('/sessions.html', useSession, sessionRefresh, isLoggedIn, calcPerms, csrf, sessions);
-router.get('/nonce/:address([a-zA-Z0-9]{42}).json', noncePage); //nonce for web3 logins
+//nonce for every wallet signature (posts, actions, registration, web3 login): an
+//address only, limited per IP since each nonce is a redis key
+router.get('/nonce/:address(0x[a-fA-F0-9]{40}).json', geoIp, processIp, ratelimit.limit('nonce', 30, 60), noncePage);
 router.get('/login.html', login);
 router.get('/register.html', register);
 router.get('/changepassword.html', changePassword);

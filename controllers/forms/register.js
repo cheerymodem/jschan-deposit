@@ -12,6 +12,7 @@ const { Permissions } = require(__dirname+'/../../lib/permission/permissions.js'
 	, { isAddress: web3UtilsIsAddress } = require('web3-utils')
 	, { Accounts, Deposits } = require(__dirname+'/../../db/')
 	, walletKey = require(__dirname+'/../../lib/deposit/walletkey.js')
+	, { checkAddress } = require(__dirname+'/../../lib/middleware/permission/bancheck.js')
 	, registerMessage = require(__dirname+'/../../lib/deposit/register.js');
 
 //registering needs a wallet with an active deposit (it replaces the captcha, and
@@ -51,6 +52,7 @@ const checkRegisterDeposit = async (req, res) => {
 	if (!twin || twin.status !== 'active') {
 		return __('No active deposit found for this wallet');
 	}
+	res.locals.registerAddress = address;
 	res.locals.walletKey = walletKey(address);
 	if (await Accounts.walletKeyExists(res.locals.walletKey)) {
 		return __('This wallet is already linked to an account');
@@ -132,6 +134,10 @@ module.exports = {
 					'error': depositError,
 					'redirect': '/register.html'
 				});
+			}
+			//a globally banned wallet cannot register (no board here, so only global bans)
+			if (await checkAddress(req, res, res.locals.registerAddress)) {
+				return;
 			}
 			await registerAccount(req, res, next);
 		} catch (err) {

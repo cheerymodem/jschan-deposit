@@ -10,7 +10,8 @@ const { Posts, Boards, Deposits } = require(__dirname+'/../../db/')
 	, { checkAddress } = require(__dirname+'/../../lib/middleware/permission/bancheck.js')
 	, { checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js')
 	, cache = require(__dirname+'/../../lib/redis/redis.js')
-	, actionMessage = require(__dirname+'/../../lib/deposit/actions.js');
+	, actionMessage = require(__dirname+'/../../lib/deposit/actions.js')
+	, ratelimit = require(__dirname+'/../../lib/deposit/ratelimit.js');
 
 //Public post actions (report, delete, spoiler, unlink) are authenticated by a
 //deposit wallet signature over the actions message, replacing post passwords.
@@ -69,6 +70,11 @@ const verifyActionDeposit = async (req, res) => {
 			res.locals.actionDepositError = __('No active deposit found for this wallet');
 			return false;
 		}
+	}
+
+	if (await ratelimit.walletFlood(res, 'actions', address)) {
+		res.locals.actionDepositError = __('You are doing that too often, please wait and try again');
+		return false;
 	}
 
 	res.locals.actionAddress = address;

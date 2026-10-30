@@ -6,6 +6,7 @@ const express  = require('express')
 //middlewares
 	, geoIp = require(__dirname+'/../lib/middleware/ip/geoip.js')
 	, processIp = require(__dirname+'/../lib/middleware/ip/processip.js')
+	, ratelimit = require(__dirname+'/../lib/deposit/ratelimit.js')
 	, calcPerms = require(__dirname+'/../lib/middleware/permission/calcpermsmiddleware.js')
 	, { Permissions } = require(__dirname+'/../lib/permission/permissions.js')
 	, hasPerms = require(__dirname+'/../lib/middleware/permission/haspermsmiddleware.js')
@@ -124,14 +125,17 @@ router.post('/global/clear', useSession, sessionRefresh, csrf, calcPerms, isLogg
 	hasPerms.one(Permissions.MANAGE_GLOBAL_SETTINGS), globalClearController.paramConverter, globalClearController.controller); //global clear
 
 //create board
-router.post('/create', geoIp, processIp, useSession, sessionRefresh, isLoggedIn, calcPerms, createBoardController.paramConverter, createBoardController.controller);
+router.post('/create', geoIp, processIp, useSession, sessionRefresh, isLoggedIn, calcPerms, createBoardController.paramConverter,
+	ratelimit.limit('create', 5, 86400, req => req.session.user), createBoardController.controller); //no captcha: limited per account and IP
 
 //accounts
-router.post('/login', useSession, loginController.paramConverter, loginController.controller);
+router.post('/login', geoIp, processIp, useSession, loginController.paramConverter,
+	ratelimit.limit('password', 10, 300, req => req.body.username), loginController.controller); //limited per IP and username
 router.post('/twofactor', useSession, sessionRefresh, csrf, calcPerms, isLoggedIn, twofactorController.paramConverter, twofactorController.controller);
 router.post('/logout', useSession, logoutForm);
 router.post('/register', geoIp, processIp, useSession, sessionRefresh, calcPerms, registerController.paramConverter, registerController.controller);
-router.post('/changepassword', geoIp, processIp, useSession, sessionRefresh, changePasswordController.paramConverter, changePasswordController.controller);
+router.post('/changepassword', geoIp, processIp, useSession, sessionRefresh, changePasswordController.paramConverter,
+	ratelimit.limit('password', 10, 300, req => req.body.username), changePasswordController.controller); //no captcha: shares the login limit
 router.post('/resign', useSession, sessionRefresh, csrf, calcPerms, isLoggedIn, resignController.paramConverter, resignController.controller);
 router.post('/deleteaccount', useSession, sessionRefresh, csrf, calcPerms, isLoggedIn, deleteAccountController.paramConverter, deleteAccountController.controller);
 router.post('/deletesessions', useSession, sessionRefresh, csrf, calcPerms, isLoggedIn, deleteSessionsController.paramConverter, deleteSessionsController.controller);

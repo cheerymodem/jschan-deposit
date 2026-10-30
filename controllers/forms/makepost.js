@@ -12,6 +12,7 @@ const makePost = require(__dirname+'/../../models/forms/makepost.js')
 	, { checkAddress: checkAddressBans } = require(__dirname+'/../../lib/middleware/permission/bancheck.js')
 	, paramConverter = require(__dirname+'/../../lib/middleware/input/paramconverter.js')
 	, { checkSchema, lengthBody, existsBody } = require(__dirname+'/../../lib/input/schema.js')
+	, ratelimit = require(__dirname+'/../../lib/deposit/ratelimit.js')
 	, { recover: web3EthAccountsRecover } = require('web3-eth-accounts');
 
 //post-time deposit gate, applied on every board. Consumes the nonce, rebuilds
@@ -54,7 +55,9 @@ const verifyDepositPost = async (req, res) => {
 		site: config.get.meta.url,
 		board: req.params.board,
 		thread: req.body.thread || null,
-		message: req.body.rawMessage != null ? req.body.rawMessage : req.body.message,
+		//paramConverter sets rawMessage (untrimmed) only when there is a message, so
+		//never take a client-supplied rawMessage for an empty one
+		message: req.body.message ? req.body.rawMessage : '',
 		fileHashes,
 		nonce,
 		signature,
@@ -78,6 +81,10 @@ const verifyDepositPost = async (req, res) => {
 	}
 	if (twin.status === 'withdrawing') {
 		res.locals.depositError = __('This wallet deposit is being withdrawn; posting is disabled');
+		return false;
+	}
+	if (await ratelimit.walletFlood(res, 'post', address)) {
+		res.locals.depositError = __('You are posting too quickly, please wait and try again');
 		return false;
 	}
 
