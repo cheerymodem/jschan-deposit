@@ -1,8 +1,7 @@
 'use strict';
 
 const client = require(__dirname+'/../../lib/deposit/client.js')
-	, { Deposits, DepositSync } = require(__dirname+'/../../db/')
-	, tombstone = require(__dirname+'/../../lib/deposit/tombstone.js')
+	, events = require(__dirname+'/../../lib/deposit/events.js')
 	, config = require(__dirname+'/../../lib/misc/config.js')
 	, dynamicResponse = require(__dirname+'/../../lib/misc/dynamic.js');
 
@@ -53,7 +52,7 @@ const verifyReceipt = async (txHash, address, contractAddress) => {
 
 module.exports = {
 
-	controller: async (req, res) => {
+	controller: async (req, res, next) => {
 
 		const { __ } = res.locals;
 		const { deposit } = config.get;
@@ -82,22 +81,6 @@ module.exports = {
 			});
 		}
 
-		//idempotent on the tx hash, claimed only after the receipt verified so a
-		//bogus or not-yet-mined hash cannot block the real confirmation. The
-		//listener may already have processed it from the chain event.
-		if (!(await DepositSync.claimTx(txHash))) {
-			//the listener wrote the modlog without a staff reason; add it now
-			if (reason) {
-				await tombstone.addConfiscationReason(txHash, reason);
-			}
-			await Deposits.delete(address);
-			return dynamicResponse(req, res, 200, 'message', {
-				'title': __('Success'),
-				'message': __('Deposit already confiscated.'),
-				'redirect': '/globalmanage/deposits.html',
-			});
-		}
-
 		//get the deposit requirement as the amount shown
 		let amount = null;
 		try {
@@ -106,9 +89,24 @@ module.exports = {
 			amount = null;
 		}
 
-		const stripped = await tombstone.confiscateFor(address, txHash, amount, reason);
-
-		await Deposits.delete(address);
+		//idempotent on the tx hash, claimed only after the receipt verified so a
+		//bogus or not-yet-mined hash cannot block the real confirmation. The
+		//listener may already have processed it from the chain event; the reason
+		//is stored either way. The exit block keeps a replayed old confirmation
+		//from touching a newer deposit by the same wallet.
+		let status, stripped;
+		try {
+			({ status, stripped } = await events.confiscate(address, Number(log.blockNumber), txHash, amount, reason));
+		} catch (err) {
+			return next(err);
+		}
+		if (status !== 'won') {
+			return dynamicResponse(req, res, 200, 'message', {
+				'title': __('Success'),
+				'message': __('Deposit already confiscated.'),
+				'redirect': '/globalmanage/deposits.html',
+			});
+		}
 
 		return dynamicResponse(req, res, 200, 'message', {
 			'title': __('Success'),
