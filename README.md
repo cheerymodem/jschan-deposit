@@ -101,8 +101,3 @@ GNU AGPLv3, see [LICENSE](LICENSE).
 
 jschan: anonymous imageboard software that doesn't suck. This fork tracks upstream on the `master`
 branch; the deposit work lives on `deposit`.
-
-Repo Mirror(s):
- - https://gitgud.io/fatchan/jschan
- - https://git.basedflare.com/fatchan/jschan
- - https://github.com/fatchan/jschan (for the cattle)
